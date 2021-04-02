@@ -1,0 +1,19 @@
+name: Upload one file to GCS
+inputs:
+- {name: input_artifact, type: Data}
+- {name: output_path, type: URI}
+implementation:
+    container:
+        image: google/cloud-sdk
+        command:
+        - bash
+        - -ex
+        - -c
+        - |
+            if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+                gcloud auth activate-service-account --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+            fi
+                        
+            gsutil cp "$0" "$1"
+        - inputPath: input_artifact
+        - inputValue: output_path

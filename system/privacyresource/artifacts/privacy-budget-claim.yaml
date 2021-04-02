@@ -1,0 +1,472 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: privacybudgetclaims.columbia.github.com
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: columbia.github.com
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                requests:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      identifier:
+                        type: string
+                      allocateRequest:
+                        type: object
+                        properties:
+                          dataset:
+                            type: string
+                          conditions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                attribute:
+                                  type: string
+                                operation:
+                                  type: string
+                                numericValue:
+                                  type: string
+                                  pattern: '^-?(\d+\.?\d*|\.\d+)$'
+                                stringValue:
+                                  type: string
+                              oneOf:
+                                - required: ["numericValue"]
+                                  properties:
+                                    operation:
+                                      enum: [">", ">=", "=", "==", "<", "<=", "greaterThan", "greaterThanOrEqual", "equal", "lessThan", "lessThanOrEqual"]
+                                - required: ["stringValue"]
+                                  properties:
+                                    operation:
+                                      enum: ["is", "include"]
+                          minNumberOfData:
+                            type: integer
+                          minNumberOfBlocks:
+                            type: integer
+                          maxNumberOfBlocks:
+                            type: integer
+                          policy:
+                            type: string
+                          timeout:
+                            type: integer
+                          minBudget:
+                            type: object
+                            properties:
+                              constant:
+                                type: object
+                                properties:
+                                  epsDel:
+                                    type: object
+                                    properties:
+                                      epsilon:
+                                        type: number
+                                      delta:
+                                        type: number
+                                  renyi:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        alpha:
+                                          type: number
+                                        epsilon:
+                                          type: number
+                              function:
+                                type: string
+                              budgetMap:
+                                type: object
+                                additionalProperties:
+                                  type: object
+                                  properties:
+                                    epsDel:
+                                      type: object
+                                      properties:
+                                        epsilon:
+                                          type: number
+                                        delta:
+                                          type: number
+                                    renyi:
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          alpha:
+                                            type: number
+                                          epsilon:
+                                            type: number
+                            oneOf:
+                              - required: ["constant"]
+                              - required: ["function"]
+                              - required: ["budgetMap"]
+                          expectedBudget:
+                            type: object
+                            properties:
+                              constant:
+                                type: object
+                                properties:
+                                  epsDel:
+                                    type: object
+                                    properties:
+                                      epsilon:
+                                        type: number
+                                      delta:
+                                        type: number
+                                  renyi:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        alpha:
+                                          type: number
+                                        epsilon:
+                                          type: number
+                                not:
+                                  required: ["renyi", "epsDel"]
+                              function:
+                                type: string
+                              budgetMap:
+                                type: object
+                                additionalProperties:
+                                  type: object
+                                  properties:
+                                    epsDel:
+                                      type: object
+                                      properties:
+                                        epsilon:
+                                          type: number
+                                        delta:
+                                          type: number
+                                    renyi:
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          alpha:
+                                            type: number
+                                          epsilon:
+                                            type: number
+                                  not:
+                                    required: ["renyi", "epsDel"]
+                            oneOf:
+                              - required: ["constant"]
+                              - required: ["function"]
+                              - required: ["budgetMap"]
+                      consumeRequest:
+                        type: object
+                        properties:
+                          policy:
+                            type: string
+                          consume:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                epsDel:
+                                  type: object
+                                  properties:
+                                    epsilon:
+                                      type: number
+                                    delta:
+                                      type: number
+                                renyi:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      alpha:
+                                        type: number
+                                      epsilon:
+                                        type: number
+                              not:
+                                required: ["renyi", "epsDel"]
+                      releaseRequest:
+                        type: object
+                        properties:
+                          policy:
+                            type: string
+                          release:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                epsDel:
+                                  type: object
+                                  properties:
+                                    epsilon:
+                                      type: number
+                                    delta:
+                                      type: number
+                                renyi:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      alpha:
+                                        type: number
+                                      epsilon:
+                                        type: number
+                              not:
+                                required: ["renyi", "epsDel"]
+                    oneOf:
+                      - required: ["allocateRequest"]
+                      - required: ["consumeRequest"]
+                      - required: ["releaseRequest"]
+                ownedBy:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      kind:
+                        type: string
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                      uid:
+                        type: string
+                      apiVersion:
+                        type: string
+                      resourceVersion:
+                        type: string
+                priority:
+                  type: integer
+            status:
+              type: object
+              properties:
+                acquiredBudgets:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                reservedBudgets:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                consumeBudgets:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                responses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      identifier:
+                        type: string
+                      state:
+                        type: string
+                      error:
+                        type: string
+                      allocateResponse:
+                        type: object
+                        properties:
+                          startTime:
+                            type: integer
+                          finishTime:
+                            type: integer
+                          budgets:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              properties:
+                                acquired:
+                                  type: object
+                                  properties:
+                                    epsDel:
+                                      type: object
+                                      properties:
+                                        epsilon:
+                                          type: number
+                                        delta:
+                                          type: number
+                                    renyi:
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          alpha:
+                                            type: number
+                                          epsilon:
+                                            type: number
+                                  not:
+                                    required: ["renyi", "epsDel"]
+                                reserved:
+                                  type: object
+                                  properties:
+                                    epsDel:
+                                      type: object
+                                      properties:
+                                        epsilon:
+                                          type: number
+                                        delta:
+                                          type: number
+                                    renyi:
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          alpha:
+                                            type: number
+                                          epsilon:
+                                            type: number
+                                  not:
+                                    required: ["renyi", "epsDel"]
+                      consumeResponse:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            budget:
+                              type: object
+                              properties:
+                                epsDel:
+                                  type: object
+                                  properties:
+                                    epsilon:
+                                      type: number
+                                    delta:
+                                      type: number
+                                renyi:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      alpha:
+                                        type: number
+                                      epsilon:
+                                        type: number
+                              not:
+                                required: ["renyi", "epsDel"]
+                            error:
+                              type: string
+                      releaseResponse:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            budget:
+                              type: object
+                              properties:
+                                epsDel:
+                                  type: object
+                                  properties:
+                                    epsilon:
+                                      type: number
+                                    delta:
+                                      type: number
+                                renyi:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      alpha:
+                                        type: number
+                                      epsilon:
+                                        type: number
+                              not:
+                                required: ["renyi", "epsDel"]
+                            error:
+                              type: string
+                    oneOf:
+                      - required: ["allocateResponse"]
+                        properties:
+                          state:
+                            enum: ["success", "pending"]
+                      - required: ["consumeResponse"]
+                        properties:
+                          state:
+                            enum: ["success"]
+                      - required: ["releaseResponse"]
+                        properties:
+                          state:
+                            enum: ["success"]
+                      - properties:
+                          state:
+                            enum: ["failure"]
+
+      subresources:
+        status: {}
+
+  # either Namespaced or Cluster
+  scope: Namespaced
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: privacybudgetclaims
+    # singular name to be used as an alias on the CLI and for display
+    singular: privacybudgetclaim
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: PrivacyBudgetClaim
+    shortNames:
+      - pbc

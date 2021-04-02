@@ -1,0 +1,59 @@
+name: Set dict key
+description: Sets dict[key] = value
+inputs:
+  - {
+      name: dict,
+      type: Data,
+      description: "Path to a Yaml file representing a dumped dictionnary.",
+    }
+  - {
+      name: key,
+      type: String,
+      description: "Name of the parameter to set.",
+    }
+  - {
+      name: value,
+      type: Data,
+      description: "Value to set.",
+    }
+outputs:
+  - {name: dict_changed,
+    description: "Initial dictionary with the value changed."
+    }    
+
+implementation:
+  container:
+    image: python:3.7
+    command:
+      - python
+      - -c
+      - |
+        import os
+        import sys
+        import subprocess
+
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyyaml'])
+
+        import yaml
+
+        p1 = sys.argv[1]
+        n = sys.argv[2]
+        v = sys.argv[3]
+        pm = sys.argv[4]
+
+        with open(p1) as f1:
+            d1 = yaml.load(f1, Loader=yaml.FullLoader)
+
+        pdir = os.path.dirname(pm)
+        if pdir and not os.path.exists(pdir):
+            os.makedirs(pdir)
+
+        with open(pm, 'w') as fm:
+            dm = d1
+            dm[n] = v
+            yaml.dump(dm, fm)
+        
+      - inputPath: dict
+      - inputValue: key
+      - inputValue: value
+      - outputPath: dict_changed

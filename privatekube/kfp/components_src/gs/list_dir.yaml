@@ -1,0 +1,20 @@
+name: List files in a directory
+description: 
+inputs:
+  - {
+      name: input_dir,
+      type: Data,
+      description: "Artifact: a directory",
+    }
+implementation:
+  container:
+    image: python:3.7
+    command:
+      - python
+      - -c
+      - |
+        import os
+        import sys
+        for csv_file in os.listdir(sys.argv[1]):
+          print(csv_file)
+      - { inputPath: input_dir }

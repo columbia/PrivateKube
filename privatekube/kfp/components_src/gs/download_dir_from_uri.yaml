@@ -1,0 +1,22 @@
+name: Download a directory tree from GCS
+inputs:
+- {name: input_dir, type: URI}
+outputs:
+- {name: output_dir}
+implementation:
+    container:
+        image: google/cloud-sdk
+        command:
+        - bash
+        - -ex
+        - -c
+        - |
+            if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+                gcloud auth activate-service-account --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+            fi
+            
+            mkdir -p "$1"
+
+            gsutil -m rsync -r "$0" "$1"
+        - inputValue: input_dir
+        - outputPath: output_dir

@@ -1,0 +1,39 @@
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: private-data-scheduler
+#  namespace: dp-sage
+#spec:
+#  containers:
+#    - name: private-data-scheduler
+#      image: privatekube/dpfscheduler:2.0
+#      args:
+#        - --kubeconfig=
+#  serviceAccountName: dp-components
+#
+#---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dpf-scheduler
+  namespace: dp-sage
+  labels:
+    app: dpf-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dpf-scheduler
+  template:
+    metadata:
+      labels:
+        app: dpf-scheduler
+    spec:
+      containers:
+        - name: dpf-scheduler
+          image: privatekube/dpfscheduler:2.0
+          args:
+            - --kubeconfig=
+            - --mode=0
+            - --n=100
+      serviceAccountName: dp-components

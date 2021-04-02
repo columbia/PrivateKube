@@ -1,0 +1,56 @@
+name: Merge Yaml Dicts
+description: Merges two Yaml dicts (artifacts) and output a new artifact.
+inputs:
+  - {
+      name: dict_1,
+      type: Data,
+      description: "Path to a Yaml file representing a dumped dictionnary.",
+    }
+  - {
+      name: dict_2,
+      type: Data,
+      description: "Path to a Yaml file representing a dumped dictionnary.",
+    }
+outputs:
+  - {name: dict_merged,
+    description: "Path to a Yaml file representing a dumped dictionnary."
+    }    
+
+implementation:
+  container:
+    image: python:3.7
+    command:
+      - python
+      - -c
+      - |
+        import os
+        import sys
+        import subprocess
+
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyyaml'])
+
+        import yaml
+
+        p1 = sys.argv[1]
+        p2 = sys.argv[2]
+        pm = sys.argv[3]
+
+        with open(p1) as f1:
+            d1 = yaml.load(f1, Loader=yaml.FullLoader)
+
+        with open(p2) as f2:
+            d2 = yaml.load(f2, Loader=yaml.FullLoader)
+
+        pdir = os.path.dirname(pm)
+        if pdir and not os.path.exists(pdir):
+            os.makedirs(pdir)
+
+        with open(pm, 'w') as fm:
+            dm = {}
+            dm[os.path.basename(p1)] = d1
+            dm[os.path.basename(p2)] = d2
+            yaml.dump(dm, fm)
+        
+      - inputPath: dict_1
+      - inputPath: dict_2
+      - outputPath: dict_merged

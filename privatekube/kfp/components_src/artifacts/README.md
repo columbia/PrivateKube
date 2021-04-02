@@ -1,0 +1,1 @@
+Useful to pass and modify arguments between other Kubeflow Pipelines components.

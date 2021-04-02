@@ -1,0 +1,22 @@
+apiVersion: "columbia.github.com/v1"
+kind: PrivacyBudgetClaim
+metadata:
+  name: claim-1
+  namespace: privacy-example
+spec:
+  requests:
+    - identifier: id-1
+      allocateRequest:
+        dataset: "taxi"
+        conditions:
+          - attribute: startTime
+            numericValue: "0"
+            operation: ">="
+          - attribute: endTime
+            numericValue: "200"
+            operation: "<"
+        expectedBudget:
+          constant:
+            epsDel:
+              epsilon: 0.01
+              delta: 0.00000001

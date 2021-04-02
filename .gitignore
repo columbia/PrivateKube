@@ -1,0 +1,59 @@
+*.pt
+evaluation/macrobenchmark/logs/*
+evaluation/macrobenchmark/data/*
+evaluation/macrobenchmark/workload/params/runs/*
+*.json.gz 
+**/.vector_cache/*
+glove.*
+workloads/amazon/pipelines/component/*.yaml
+dpfscheduler/dpfscheduler
+privacyresource/privacyresource
+**/.ipynb_checkpoints/*
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Custom
+*.vscode
+*.pyc
+*checkpoint.ipynb
+*.egg-info/*
+**/.cache/*
+**/.DS_Store
+
+# Authentication
+*secrets.py
+*secrets.sh
+
+system/dpfscheduler/vendor/
+system/privacyresource/vendor/
+system/privacycontrollers/vendor/
+
+**/go.sum
+
+thirdparty/

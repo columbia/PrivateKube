@@ -1,0 +1,19 @@
+apiVersion: "columbia.github.com/v1"
+kind: PrivateDataBlock
+metadata:
+  name: block-1
+  namespace: privacy-example
+spec:
+  dimensions:
+    - attribute: startTime
+      numericValue: "0"
+    - attribute: endTime
+      numericValue: "100"
+    - attribute: userId
+      stringValue: "foo"
+  dataset: "taxi"
+  dataSource: "www.columbia.edu/db/1"
+  initialBudget:
+    epsDel:
+      epsilon: 5
+      delta: 0.0001

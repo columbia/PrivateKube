@@ -1,0 +1,270 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: privatedatablocks.columbia.github.com
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: columbia.github.com
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                dimensions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      attribute:
+                        type: string
+                      numericValue:
+                        type: string
+                        pattern: '^-?(\d+\.?\d*|\.\d+)$'
+                      stringValue:
+                        type: string
+                    oneOf:
+                      - required: ["numericValue"]
+                      - required: ["stringValue"]
+                dataset:
+                  type: string
+                dataSource:
+                  type: string
+                initialBudget:
+                  type: object
+                  properties:
+                    epsDel:
+                      type: object
+                      properties:
+                        epsilon:
+                          type: number
+                        delta:
+                          type: number
+                    renyi:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          alpha:
+                            type: number
+                          epsilon:
+                            type: number
+                  not:
+                    required: ["renyi", "epsDel"]
+#                  oneOf:
+#                    - required: ["epsDel"]
+#                    - required: ["renyi"]
+
+                releaseMode:
+                  type: string
+                  enum: ["flow", "base"]
+                budgetReturnPolicy:
+                  type: string
+                  enum: ["toAvailable", "toPending"]
+                flowReleasingOption:
+                  type: object
+                  properties:
+                    startTime:
+                      type: integer
+                      minimum: 0
+                    endTime:
+                      type: integer
+                      minimum: 0
+                    duration:
+                      type: integer
+                      minimum: 0
+                      exclusiveMinimum: true
+            status:
+              type: object
+              properties:
+                availableBudget:
+                  type: object
+                  properties:
+                    epsDel:
+                      type: object
+                      properties:
+                        epsilon:
+                          type: number
+                        delta:
+                          type: number
+                    renyi:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          alpha:
+                            type: number
+                          epsilon:
+                            type: number
+                  not:
+                    required: ["renyi", "epsDel"]
+                pendingBudget:
+                  type: object
+                  properties:
+                    epsDel:
+                      type: object
+                      properties:
+                        epsilon:
+                          type: number
+                        delta:
+                          type: number
+                    renyi:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          alpha:
+                            type: number
+                          epsilon:
+                            type: number
+                  not:
+                    required: ["renyi", "epsDel"]
+                lastBudgetReleaseTime:
+                  type: integer
+                acquiredBudgetMap:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                reservedBudgetMap:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                committedBudgetMap:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      epsDel:
+                        type: object
+                        properties:
+                          epsilon:
+                            type: number
+                          delta:
+                            type: number
+                      renyi:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            alpha:
+                              type: number
+                            epsilon:
+                              type: number
+                    not:
+                      required: ["renyi", "epsDel"]
+                lockedBudgetMap:
+                  type: object
+                  additionalProperties:
+                    type: object
+                    properties:
+                      budget:
+                        type: object
+                        properties:
+                          acquired:
+                            type: object
+                            properties:
+                              epsDel:
+                                type: object
+                                properties:
+                                  epsilon:
+                                    type: number
+                                  delta:
+                                    type: number
+                              renyi:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    alpha:
+                                      type: number
+                                    epsilon:
+                                      type: number
+                            not:
+                              required: ["renyi", "epsDel"]
+                          reserved:
+                            type: object
+                            properties:
+                              epsDel:
+                                type: object
+                                properties:
+                                  epsilon:
+                                    type: number
+                                  delta:
+                                    type: number
+                              renyi:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    alpha:
+                                      type: number
+                                    epsilon:
+                                      type: number
+                            not:
+                              required: ["renyi", "epsDel"]
+                      state:
+                        type: string
+                        enum: ["allocating", "allocated", "committing", "committed", "aborting",  "aborted", "abortReserved",
+                               "dpf_acquiring", "dpf_acquired", "dpf_reserving", "dpf_reserved"]
+      subresources:
+        status: {}
+
+  # either Namespaced or Cluster
+  scope: Namespaced
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: privatedatablocks
+    # singular name to be used as an alias on the CLI and for display
+    singular: privatedatablock
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: PrivateDataBlock
+    shortNames:
+      - pvdb
+      - pb

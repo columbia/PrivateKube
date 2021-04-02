@@ -1,0 +1,29 @@
+# Dataset arguments
+max_text_len: 50
+vocab_size: 10000
+
+# Model arguments
+embedding_dim: 100
+model: bow
+task: sentiment
+
+# Training arguments
+batch_size: 4096 
+device: cuda
+learning_rate: 0.01
+learning_rate_scheduler: 1
+noise: -1.0
+virtual_batch_multiplier: -1
+adaptive_batch_size: 1
+dynamic_clipping: 0
+max_grad_norm: 1.0
+per_layer_clipping: 0
+
+# Output arguments
+log_path: ''
+metrics_path: ''
+model_path: ''
+
+# Experiment arguments
+dataset: amazon
+python_path: classification.py
