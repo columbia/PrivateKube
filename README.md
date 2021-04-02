@@ -7,7 +7,7 @@ We provide:
 - The DPF scheduler
 - The DP workloads (dataset, models and parameters) used for the macrobenchmark
 
-We do not provide (yet):
+We do not provide *yet* but intend to do so in the near future:
 - The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure)
 - The microbenchmark
 - The end-to-end macrobenchmark
