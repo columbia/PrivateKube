@@ -21,7 +21,7 @@ This section explains how to install the system and walks through a simple examp
 
 PrivateKube needs a Kubernetes cluster to run. If you don't have a cluster, you can install a lightweight Microk8s cluster on a decent laptop. Kubeflow requires more resources but it is not required in this section.
 
-Below are the instruction to install and configure a lightweight cluster on Ubuntu. For other platforms, see [https://microk8s.io/](https://microk8s.io/).
+Below are the instructions to install and configure a lightweight cluster on Ubuntu. For other platforms, see [https://microk8s.io/](https://microk8s.io/).
 
 ```bash
 sudo snap install microk8s --classic
