@@ -1,6 +1,6 @@
 # PrivateKube
 
-**Status.** This is a partial release of PrivateKube.
+**Status.** This is a partial release of PrivateKube. An updated version (tag `v1.0`) will be released by June 23rd, 2021.
 
 We provide:
 - The privacy resource implementation
