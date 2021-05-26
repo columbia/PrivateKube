@@ -1,6 +1,7 @@
 # PrivateKube
 
 **Status.** This is a partial release of PrivateKube. An updated version (tag `v1.0`) will be released by June 23rd, 2021.
+At that time, we will also upload an extended version of our OSDI'21 paper that provides some proofs and Renyi DP background that we omitted from the conference paper.
 
 We provide:
 - The privacy resource implementation
