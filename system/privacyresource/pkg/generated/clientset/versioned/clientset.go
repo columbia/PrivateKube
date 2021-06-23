@@ -26,7 +26,7 @@ package versioned
 import (
 	"fmt"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

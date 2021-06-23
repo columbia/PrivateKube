@@ -31,4 +31,4 @@ You can then push it to your Docker repository, for instance:
 docker push privatekube/dpfscheduler:latest
 ```
 
-Finally, you can update the Kubernetes deployment `dpfscheduer/manifests/scheduler.yaml` to fetch the latest version from your repository.
+Finally, you can update the Kubernetes deployment `dpfscheduler/manifests/scheduler.yaml` to fetch the latest version from your repository.

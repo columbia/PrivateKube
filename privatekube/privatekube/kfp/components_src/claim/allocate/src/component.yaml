@@ -1,0 +1,77 @@
+name: Allocate timespan
+description: Simple claim with allocation request
+inputs:
+  - { name: dataset, type: String, description: "Dataset to query" }
+  - { name: namespace, type: String, description: "Namespace for the claim" }
+  - {
+      name: start_time,
+      type: Float,
+      description: "Request blocks >= start_time",
+    }
+  - { name: end_time, type: Float, description: "Request blocks < end_time" }
+  - {
+      name: epsilon,
+      type: Float,
+      description: "Request epsilon_min = epsilon_expected for each block",
+    }
+  - {
+      name: delta,
+      type: Float,
+      description: "Request delta_min = delta_expected for each block",
+    }
+  - {
+      name: n_blocks,
+      type: Integer,
+      description: "Number of blocks requested.",
+    }
+  - {
+      name: timeout,
+      type: Integer,
+      description: "Timeout after which the component fails if the scheduler did not reply.",
+    }
+outputs:
+  - {
+      name: data,
+      type: Data,
+      description: "Artifact: file with one datablock URI per line",
+    }
+  - {
+      name: budget,
+      type: Data,
+      description: "Artifact: JSON containing eps, delta allocated on the output dataset for downstream components",
+    }
+  - {
+      name: claim,
+      type: Data,
+      description: "Artifact: JSON containing claim name, request id.",
+    }
+implementation:
+  container:
+    image: DOCKER_IMAGE_PLACEHOLDER
+    command:
+      [
+        python3,
+        main.py,
+        --dataset,
+        { inputValue: dataset },
+        --namespace,
+        { inputValue: namespace },
+        --start_time,
+        { inputValue: start_time },
+        --end_time,
+        { inputValue: end_time },
+        --epsilon,
+        { inputValue: epsilon },
+        --delta,
+        { inputValue: delta },
+        --n_blocks,
+        { inputValue: n_blocks },
+        --timeout,
+        { inputValue: timeout },
+        --output_data,
+        { outputPath: data },
+        --output_budget,
+        { outputPath: budget },
+        --output_claim,
+        { outputPath: claim },
+      ]

@@ -28,9 +28,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	columbiagithubcom "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/columbia.github.com"
-	internalinterfaces "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
+	versioned "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	columbiagithubcom "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/columbia.github.com"
+	internalinterfaces "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

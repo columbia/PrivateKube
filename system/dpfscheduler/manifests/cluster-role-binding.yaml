@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: dp-sage
+  name: privatekube
   labels:
-    name: dp-sage
+    name: privatekube
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: dp-components
-  namespace: dp-sage
+  namespace: privatekube
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -35,7 +35,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: dp-components
-    namespace: dp-sage
+    namespace: privatekube
 roleRef:
   kind: ClusterRole
   name: privacy-resource-admin

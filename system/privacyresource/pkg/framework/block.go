@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 type BlockHandler interface {

@@ -1,9 +1,10 @@
 package datablocklifecycle
 
 import (
-	"columbia.github.com/sage/privacycontrollers/pkg/tools/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
 	"fmt"
+
+	"columbia.github.com/privatekube/privacycontrollers/pkg/tools/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"

@@ -5,8 +5,8 @@ import (
 	"math"
 	"sync"
 
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 type DemandState struct {

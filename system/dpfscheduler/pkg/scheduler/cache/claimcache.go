@@ -1,8 +1,9 @@
 package cache
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
 	"fmt"
+
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"k8s.io/klog"
 )
 

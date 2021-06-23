@@ -1,11 +1,12 @@
 package queue
 
 import (
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"container/list"
 	"fmt"
-	"k8s.io/klog"
 	"sync"
+
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"k8s.io/klog"
 )
 
 type queueElementState string

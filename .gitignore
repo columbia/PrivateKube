@@ -1,6 +1,7 @@
 *.pt
 evaluation/macrobenchmark/logs/*
 evaluation/macrobenchmark/data/*
+evaluation/macrobenchmark/graphs/*
 evaluation/macrobenchmark/workload/params/runs/*
 *.json.gz 
 **/.vector_cache/*
@@ -9,6 +10,9 @@ workloads/amazon/pipelines/component/*.yaml
 dpfscheduler/dpfscheduler
 privacyresource/privacyresource
 **/.ipynb_checkpoints/*
+
+**/*secrets.yaml
+
 # Prerequisites
 *.d
 
@@ -53,6 +57,7 @@ privacyresource/privacyresource
 system/dpfscheduler/vendor/
 system/privacyresource/vendor/
 system/privacycontrollers/vendor/
+evaluation/macrobenchmark/scheduling/vendor/
 
 **/go.sum
 

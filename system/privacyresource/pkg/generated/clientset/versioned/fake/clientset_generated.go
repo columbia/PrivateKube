@@ -24,9 +24,9 @@ SOFTWARE.
 package fake
 
 import (
-	clientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
-	fakecolumbiav1 "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1/fake"
+	clientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
+	fakecolumbiav1 "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

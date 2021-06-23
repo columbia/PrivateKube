@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl create ns dp-sage
+kubectl create ns privatekube
 
 kubectl apply -f system/privacyresource/artifacts/private-data-block.yaml
 

@@ -1,7 +1,7 @@
 FROM golang as builder
 
 ENV GO111MODULE=on
-ENV DIRPATH /app/columbia.github.com/sage
+ENV DIRPATH /app/columbia.github.com/privatekube
 
 WORKDIR $DIRPATH
 RUN mkdir privacyresource
@@ -27,11 +27,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build  -o ../scheduler -mod=mod
 
 #second stage
 FROM alpine:latest
-ENV DIRPATH /app/columbia.github.com/sage
+ENV DIRPATH /app/columbia.github.com/privatekube
 WORKDIR $DIRPATH
 
 RUN apk add --no-cache tzdata
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder $DIRPATH .
 
-ENTRYPOINT ["/app/columbia.github.com/sage/scheduler"]
+ENTRYPOINT ["/app/columbia.github.com/privatekube/scheduler"]

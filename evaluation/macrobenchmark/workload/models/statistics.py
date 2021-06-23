@@ -40,6 +40,7 @@ from privatekube.privacy.mechanisms import (
 
 from privatekube.privacy.rdp import (
     ALPHAS,
+    compute_rdp_gaussian_from_noise,
     compute_rdp_laplace_from_noise,
 )
 
@@ -60,8 +61,9 @@ model_args = {
 
 training_args = {
     "dp": "user-time",
+    "mechanism": "laplace",
     "epsilon": 0.5,
-    "delta": 0,
+    "delta": 0.0,
     "batch_size": 2048,
 }
 
@@ -131,8 +133,10 @@ def build_dataset():
     elif FLAGS.dp == "user":
         n_days = get_max_days(block_names, block_dir)
         max_events = min(MAX_PER_DAY * n_days, TOTAL_USER_MAX)
+    else:
+        max_events = -1
 
-    if FLAGS.dp == "event":
+    if FLAGS.dp == "event" or "non-dp":
         dataset = EventLevelDataset(
             blocks_dir=block_dir,
             from_h5=from_h5,
@@ -246,6 +250,19 @@ def pfloat(c):
     return float(max(0, c))
 
 
+def sanitize(x, sensitivity):
+    # We are only using count queries
+    L1_sensitivity = sensitivity
+    L2_sensitivity = sensitivity
+
+    if FLAGS.mechanism == "laplace":
+        return laplace_sanitize(x, sensitivity=L1_sensitivity, epsilon=FLAGS.epsilon)
+    if FLAGS.mechanism == "gaussian" and FLAGS.delta > 0:
+        return gaussian_sanitize(
+            x, sensitivity=L2_sensitivity, epsilon=FLAGS.epsilon, delta=FLAGS.delta
+        )
+
+
 def run_query():
 
     dataset, max_events = build_dataset()
@@ -260,13 +277,11 @@ def run_query():
     logging.info(len(loader))
     logging.info(len(dataset))
 
-    rdp_epsilons = None
-
     if FLAGS.model == "count_reviews":
         c = len(dataset)
 
         if FLAGS.dp != "non-dp":
-            d = pint(laplace_sanitize(c, sensitivity=max_events, epsilon=FLAGS.epsilon))
+            d = pint(sanitize(c, sensitivity=max_events))
         else:
             d = c
 
@@ -282,11 +297,7 @@ def run_query():
             # Disjoint datasets (an event belongs to only one product)
             d = {}
             for product, count in c.items():
-                d[product] = pint(
-                    laplace_sanitize(
-                        count, sensitivity=max_events, epsilon=FLAGS.epsilon
-                    )
-                )
+                d[product] = pint(sanitize(count, sensitivity=max_events))
             # Parallel RDP composition: take the max curve (here, it just corresponds to the max noise)
 
         else:
@@ -294,37 +305,13 @@ def run_query():
 
         r = {FLAGS.model: d, "relative_error": relative_error(c, d)}
 
-    if FLAGS.model == "avg_rating_per_category":
-        avg, counts = avg_rating_per_category(loader)
-
-        if FLAGS.dp != "non-dp":
-            d = {}
-            for cat, count in counts.items():
-                # We can't use the real value of the counts to compute the noise
-                d[cat] = pfloat(
-                    laplace_sanitize(
-                        avg[cat],
-                        sensitivity=max_events * MAX_RATING,
-                        epsilon=FLAGS.epsilon,
-                    )
-                )
-
-        else:
-            d = avg
-
-        r = {FLAGS.model: d, "relative_error": relative_error(avg, d)}
-
     if FLAGS.model == "avg_rating":
         avg, count = avg_rating(loader)
         # NOTE: we use the true count here. In practice, we should use the DP count given by the block and pay a tiny additional privacy cost.
 
         logging.info(f"True avg rating: {avg}")
         if FLAGS.dp != "non-dp":
-            d = pfloat(
-                laplace_sanitize(
-                    avg, sensitivity=max_events / float(count), epsilon=FLAGS.epsilon
-                )
-            )
+            d = pfloat(sanitize(avg, sensitivity=max_events / float(count)))
 
         else:
             d = avg
@@ -336,10 +323,9 @@ def run_query():
 
         if FLAGS.dp != "non-dp":
             d = pfloat(
-                laplace_sanitize(
+                sanitize(
                     avg,
                     sensitivity=MAX_TOKENS * max_events / float(count),
-                    epsilon=FLAGS.epsilon,
                 )
             )
         else:
@@ -351,11 +337,7 @@ def run_query():
         count = count_tokens(loader)
 
         if FLAGS.dp != "non-dp":
-            d = pint(
-                laplace_sanitize(
-                    count, sensitivity=MAX_TOKENS * max_events, epsilon=FLAGS.epsilon
-                )
-            )
+            d = pint(sanitize(count, sensitivity=MAX_TOKENS * max_events))
         else:
             d = count
 
@@ -368,13 +350,12 @@ def run_query():
             d = float(
                 np.sqrt(
                     pfloat(
-                        laplace_sanitize(
+                        sanitize(
                             np.square(std),
                             sensitivity=np.square(
                                 MAX_TOKENS * max_events / float(count)
                             )
                             * (count - 1),
-                            epsilon=FLAGS.epsilon,
                         ),
                     )
                 )
@@ -384,16 +365,25 @@ def run_query():
 
         r = {FLAGS.model: d, "relative_error": relative_error(std, d)}
 
+    rdp_epsilons = None
+
     if FLAGS.dp != "non-dp":
         # NOTE: The RDP budget is the same even for functions with sensitivity > 1
         # Proof: see Proposition 6 of the RDP paper, redo the calculation and
         # perform a variable substitution with dx = Δf du
-        r.update(
-            {
-                "alphas": ALPHAS,
-                "rdp_epsilons": compute_rdp_laplace_from_noise(1 / FLAGS.epsilon),
-            }
-        )
+
+        if FLAGS.mechanism == "laplace":
+            rdp_epsilons = compute_rdp_laplace_from_noise(1 / FLAGS.epsilon)
+        if FLAGS.mechanism == "gaussian":
+            rdp_epsilons = compute_rdp_gaussian_from_noise(
+                sigma=np.sqrt(2.0 * np.log(1.25 / FLAGS.delta)) / FLAGS.epsilon
+            )
+    r.update(
+        {
+            "alphas": ALPHAS,
+            "rdp_epsilons": rdp_epsilons,
+        }
+    )
 
     r.update(flags_to_dict(dataset_args, model_args, training_args))
     return r

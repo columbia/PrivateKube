@@ -6,9 +6,9 @@ import (
 	"flag"
 	"time"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	privacyinformers "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	privacyinformers "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions"
 	"github.com/shopspring/decimal"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +26,6 @@ var (
 	blockName   = "block-tmp-1"
 	claimName   = "claim-tmp-1"
 )
-
 
 func main() {
 	klog.InitFlags(nil)

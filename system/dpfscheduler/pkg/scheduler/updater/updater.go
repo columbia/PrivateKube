@@ -1,18 +1,19 @@
 package updater
 
 import (
-	schedulercache "columbia.github.com/sage/dpfscheduler/pkg/scheduler/cache"
-	schedulingerrors "columbia.github.com/sage/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
 	"context"
 	"fmt"
+	"strconv"
+
+	schedulercache "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
+	schedulingerrors "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
-	"strconv"
 )
 
 var (
@@ -45,6 +46,7 @@ func NewResourceUpdater(
 	}
 }
 
+// TODO: use this stuff to update the counter?
 func (updater *ResourceUpdater) ApplyOperationToDataBlock(
 	operation func(*columbiav1.PrivateDataBlock) error,
 	blockHandler framework.BlockHandler) error {
@@ -117,7 +119,7 @@ func (updater *ResourceUpdater) ApplyOperationToClaim(
 }
 
 func (updater *ResourceUpdater) AddResponseToAnnotation(claimHandler framework.ClaimHandler) {
-	//TODO: temporary annotate, which should be taken care by controller
+	// Temporary annotation -- should be handled by the controller
 	for true {
 		claim := snapClaimAfterCheckNull(claimHandler)
 		if claim == nil {

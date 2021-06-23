@@ -1,11 +1,10 @@
 package flowreleasing
 
 import (
-	schedulercache "columbia.github.com/sage/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/updater"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"k8s.io/klog"
+	schedulercache "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 type Controller struct {
@@ -41,8 +40,9 @@ func (controller *Controller) Release() []*schedulercache.BlockState {
 	for _, blockState := range controller.cache.AllBlocks() {
 		_ = controller.resourceUpdater.ApplyOperationToDataBlock(controller.releaseLatestBudget, blockState)
 
-		klog.Infof("block [%s] has pending budget %v, available budget %v", blockState.GetId(),
-			blockState.View().Status.PendingBudget, blockState.View().Status.AvailableBudget)
+		// klog.Infof("block [%s] has pending budget %v, available budget %v", blockState.GetId(),
+		// 	blockState.View().Status.PendingBudget.ToString(),
+		// 	blockState.View().Status.AvailableBudget.ToString())
 
 		if !blockState.View().Status.AvailableBudget.IsEmpty() {
 			releasedBlocks = append(releasedBlocks, blockState)
@@ -89,7 +89,7 @@ func (controller *Controller) releaseLatestBudget(block *columbiav1.PrivateDataB
 	//klog.Infof("lastDuration, RemainDuration", lastDuration, remainingDuration)
 	// this evaluation also prevents zero division.
 	if lastDuration >= remainingDuration {
-		releaseBudget(block, block.Status.PendingBudget, now)
+		releaseBudget(block, block.Status.PendingBudget.Copy(), now)
 		return nil
 	}
 

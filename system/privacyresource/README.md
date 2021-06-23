@@ -33,7 +33,7 @@ Informers and listers are the basis for building controllers.
 
 Informers keep track of create, update, and delete operations on the PrivateDataBlock CustomResource.
 
-Through the Lister, you can access items in the local cache storage. Objects are kept in a thread-safe store. The UpdateStatus() function is defined [here](https://github.com/columbia/sage/blob/master/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1/privacybudgetclaim.go). A test can be found [here](https://github.com/columbia/sage/blob/master/privacyresource/main.go#L119).
+Through the Lister, you can access items in the local cache storage. Objects are kept in a thread-safe store. The UpdateStatus() function is defined [here](https://github.com/columbia/privatekube/blob/master/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1/privacybudgetclaim.go). A test can be found [here](https://github.com/columbia/privatekube/blob/master/privacyresource/main.go#L119).
 
 SyncHandler compares the actual state with the desired state (Spec) and updates the status block of the PrivateDataBlock resource.
 

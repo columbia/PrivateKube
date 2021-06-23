@@ -1,12 +1,13 @@
 package algorithm
 
 import (
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/updater"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"fmt"
+
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"k8s.io/klog"
 )
 

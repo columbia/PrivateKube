@@ -22,10 +22,6 @@ func TestRenyiBudget_Add(t *testing.T) {
 	res := a.Add(b)
 	eps := [...]float64{20, 6}
 
-	// NOTE(Pierre): I disagree with this semantic
-	// Alternatively: linear interpolation
-	// eps := [...]float64{20, 0, 0, 0, 0, 0, 0, 9, 7, 0, 0, 0, 6}
-
 	if len(res) != len(eps) {
 		t.Fatal("output size is incorrect")
 	}

@@ -1,8 +1,8 @@
 package cache
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 )
 
 type Cache interface {

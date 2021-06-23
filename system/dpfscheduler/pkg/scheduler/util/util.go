@@ -1,9 +1,12 @@
 package util
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"reflect"
+
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"github.com/shopspring/decimal"
+	distuv "gonum.org/v1/gonum/stat/distuv"
 )
 
 func GetBlockId(block *columbiav1.PrivateDataBlock) string {
@@ -44,4 +47,19 @@ func GetStringKeysFromMap(m interface{}) []string {
 
 func DeleteLock(block *columbiav1.PrivateDataBlock, requestViewer framework.RequestViewer) {
 	delete(block.Status.LockedBudgetMap, requestViewer.Id)
+}
+
+func ToDecimal(i int) *decimal.Decimal {
+	d := decimal.New(int64(i), 0)
+	return &d
+}
+
+// LaplaceNoise generates noise from an exponential distribution with parameter lambda = noise_scale
+// This is not a production-ready noise generation process
+func LaplaceNoise(noise_scale float64) float64 {
+	l := distuv.Laplace{
+		Mu:    0,
+		Scale: noise_scale,
+	}
+	return l.Rand()
 }

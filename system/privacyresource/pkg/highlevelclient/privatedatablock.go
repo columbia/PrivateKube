@@ -3,11 +3,10 @@ package highlevelclient
 import (
 	"fmt"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	lowlevelclient "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	lowlevelclient "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
 
 var budgetPrecision = 1e-8
 

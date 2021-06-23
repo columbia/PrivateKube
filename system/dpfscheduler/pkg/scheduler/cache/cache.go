@@ -3,7 +3,7 @@ package cache
 import (
 	"sync"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 type Cache interface {
@@ -39,10 +39,10 @@ type StateCache struct {
 	blockCache PrivateDataBlockCache
 }
 
-func NewStateCache() *StateCache {
+func NewStateCache(counterOptions *StreamingCounterOptions) *StateCache {
 	return &StateCache{
 		claimCache: *NewClaimCache(),
-		blockCache: *NewPrivateDataBlockCache(),
+		blockCache: *NewPrivateDataBlockCache(counterOptions),
 	}
 }
 

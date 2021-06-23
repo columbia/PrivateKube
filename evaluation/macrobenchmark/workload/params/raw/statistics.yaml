@@ -1,25 +1,30 @@
 # Model arguments
-model: 
-- "count_reviews"
-- "count_per_category"
-- "avg_rating_per_category"
-- "avg_rating"
-- "avg_tokens"
-- "count_tokens"
-- "std_tokens"
-dp: 
-- "non-dp"
-- "event"
-- "user-time"
-- "user"
+n_blocks:
+  - 100
+  - 200
+  - 300
+  - 400
+  - 500
+  - 1_000
+  - 2_500
+  - 5_000
+  - 10_000
+  - 15_000
+  - 20_000
+  - 25_000
+
+epsilon:
+  - 0.01
+  - 0.05
+  - 0.1
+
+delta: 1e-10
 
 # Training arguments
 batch_size: 2048
 
 # Output arguments
-log_path: ''
-metrics_path: ''
-model_path: ''
+log_path: ""
 
 # Experiment arguments
 dataset: amazon

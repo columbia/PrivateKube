@@ -1,9 +1,9 @@
 package scheduler
 
 import (
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
 )
@@ -15,11 +15,17 @@ func (dpfScheduler *DpfScheduler) addBlock(obj interface{}) {
 		return
 	}
 
-	var err error
-	if _, err = dpfScheduler.cache.AddBlock(block); err != nil {
+	blockState, err := dpfScheduler.cache.AddBlock(block)
+	if err != nil {
 		klog.Errorf("scheduler cache AddBlock failed: %v", err)
 		return
 	}
+
+	// A hack to ensure that the block's new state is not overwritten
+	refresh := func(block *columbiav1.PrivateDataBlock) error {
+		return nil
+	}
+	dpfScheduler.updater.ApplyOperationToDataBlock(refresh, blockState)
 
 	klog.Infof("get a new block %s", util.GetBlockId(block))
 }
@@ -38,6 +44,7 @@ func (dpfScheduler *DpfScheduler) updateBlock(oldObj, newObj interface{}) {
 	}
 
 	klog.Infof("Data Block [%s] has been updated", util.GetBlockId(newBlock))
+
 }
 
 func (dpfScheduler *DpfScheduler) deleteBlock(obj interface{}) {

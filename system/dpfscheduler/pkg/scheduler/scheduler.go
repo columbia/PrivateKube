@@ -1,24 +1,25 @@
 package scheduler
 
 import (
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/algorithm"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/flowreleasing"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/queue"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/updater"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
 	"context"
 	"fmt"
+	"time"
+
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/algorithm"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/flowreleasing"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/queue"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
-	"time"
 
-	schedulercache "columbia.github.com/sage/dpfscheduler/pkg/scheduler/cache"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	informer "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
+	schedulercache "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	informer "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 )
@@ -86,7 +87,7 @@ type DpfScheduler struct {
 
 	// default releasing period for DPN-T policy. Unit is ms.
 	// How frequent should the scheduler release budget
-	defaultReleasingPeriod int
+	defaultReleasingPeriod int64
 }
 
 type DpfSchedulerOption struct {
@@ -99,11 +100,15 @@ type DpfSchedulerOption struct {
 	// N for DPF-N Policy
 	N int
 
-	// default releasing period for DPN-T policy. Unit is sec.
-	DefaultReleasingPeriod int
+	// default releasing period for DPN-T policy. Unit is ms.
+	DefaultReleasingPeriod int64
 
 	// default releasing period for DPN-T policy. Unit is ms.
 	DefaultReleasingDuration int64
+
+	// Optional: configuration for the streaming counter
+	// E.g. budget for the Laplace mechanism used by the counter (will be converted to RDP if necessary)
+	StreamingCounterOptions *schedulercache.StreamingCounterOptions
 }
 
 func DefaultNSchemeOption() DpfSchedulerOption {
@@ -118,9 +123,22 @@ func DefaultTSchemeOption() DpfSchedulerOption {
 	return DpfSchedulerOption{
 		Mode:                     TScheme,
 		DefaultTimeout:           20000,
-		DefaultReleasingPeriod:   5,
+		DefaultReleasingPeriod:   10000,
 		DefaultReleasingDuration: 30000,
 	}
+}
+
+func NewStreamingCounterOptions(LaplaceNoise float64, MaxNumberOfTicks int) *schedulercache.StreamingCounterOptions {
+
+	// func NewStreamingCounterOptions(b columbiav1.PrivacyBudget, T int) schedulercache.StreamingCounterOptions {
+	return &schedulercache.StreamingCounterOptions{
+		LaplaceNoise:     LaplaceNoise,
+		MaxNumberOfTicks: MaxNumberOfTicks,
+	}
+}
+
+func (option DpfSchedulerOption) String() string {
+	return fmt.Sprintf("Mode: %d (0 for N, 1 for T)\nTimeout %d\nN %d\nPeriod %d\nTotal duration %d", option.Mode, option.DefaultTimeout, option.N, option.DefaultReleasingPeriod, option.DefaultReleasingDuration)
 }
 
 func New(privacyResourceClient privacyclientset.Interface,
@@ -130,7 +148,7 @@ func New(privacyResourceClient privacyclientset.Interface,
 	stopCh <-chan struct{},
 	option DpfSchedulerOption) (*DpfScheduler, error) {
 	// this schedulerCache will be used by the scheduler and its algorithm engine
-	schedulerCache := schedulercache.NewStateCache()
+	schedulerCache := schedulercache.NewStateCache(option.StreamingCounterOptions)
 
 	scheduler := new(DpfScheduler)
 	scheduler.privateResourceClient = privacyResourceClient
@@ -144,7 +162,7 @@ func New(privacyResourceClient privacyclientset.Interface,
 	if option.Mode == TScheme {
 		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan)
 		releaseOption := flowreleasing.ReleaseOption{
-			DefaultDuration: option.DefaultReleasingDuration * time.Second.Milliseconds(),
+			DefaultDuration: option.DefaultReleasingDuration,
 		}
 		scheduler.flowController = flowreleasing.MakeController(schedulerCache, scheduler.updater, scheduler.timer, releaseOption)
 		scheduler.mode = TScheme
@@ -181,7 +199,7 @@ func (dpfScheduler *DpfScheduler) Run(ctx context.Context) {
 	go dpfScheduler.channelHandler()
 
 	if dpfScheduler.mode == TScheme {
-		go wait.UntilWithContext(ctx, dpfScheduler.flowReleaseAndAllocate, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Second)
+		go wait.UntilWithContext(ctx, dpfScheduler.flowReleaseAndAllocate, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
 	}
 
 	go wait.UntilWithContext(ctx, dpfScheduler.checkTimeout, queue.BucketSize*time.Millisecond)

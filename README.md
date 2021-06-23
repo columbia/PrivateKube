@@ -1,18 +1,17 @@
 # PrivateKube
 
-**Status.** This is a partial release of PrivateKube. An updated version (tag `v1.0`) will be released by June 23rd, 2021.
-At that time, we will also upload an extended version of our OSDI'21 paper that provides some proofs and Renyi DP background that we omitted from the conference paper.
-
-We provide:
-- The privacy resource implementation
-- The DPF scheduler
+**Status.** This release of PrivateKube provides:
+- The privacy resource implementation (both RDP and traditional DP)
+- The DPF scheduler (DPF-N for both RDP and traditional DP)
 - The DP workloads (dataset, models and parameters) used for the macrobenchmark
-
-We do not provide *yet* but intend to do so in the near future:
-- The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure)
 - The microbenchmark
 - The end-to-end macrobenchmark
-- The Grafana dashboard
+  
+
+We do not provide *yet* but intend to do so in the near future:
+- The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline
+- An extended version of our OSDI'21 paper that provides some proofs and Renyi DP background that we omitted from the conference paper.
+
 
 ## 1. Getting started
 
@@ -97,12 +96,12 @@ conda activate privatekube
 
 Install the dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r privatekube/requirements.txt
 ```
 
 Install the PrivateKube package:
 ```bash
-pip install -e .
+pip install -e privatekube
 ```
 
 #### Deploy PrivateKube to your cluster
@@ -118,7 +117,7 @@ If you prefer to understand what is going on, you can run the following commands
 First, let's create a clean namespace to separate PrivateKube from the rest of the cluster:
 
 ```bash
-kubectl create ns dp-sage
+kubectl create ns privatekube
 ```
 
 Then, create the custom resources:
@@ -150,9 +149,10 @@ kubectl get pods -A | grep scheduler
 
 Then, in the same terminal, monitor the logs of the scheduler with something similar to:
 ```bash
-kubectl logs --follow dpf-scheduler-5fb6886497-w7x49 -n dp-sage 
+kubectl logs --follow dpf-scheduler-5fb6886497-w7x49 -n privatekube 
 ```
 
+(alternatively, you can directly use: `kubectl logs --follow "$(kubectl get pods -n privatekube | grep scheduler | awk -F ' ' '{print $1}')" -n privatekube`)
 
 Open another terminal. We are going to create a block and a claim and see how they are being scheduled.
 
@@ -171,7 +171,7 @@ kubectl get pb -A
 Add a first datablock:
 
 ```bash
-kubectl apply -f evaluation/examples/dpf-base/add-block.yaml
+kubectl apply -f examples/privacyresource/dpf-base/add-block.yaml
 ```
 
 List the datablocks to see if you can see your new block:
@@ -191,7 +191,7 @@ kubectl describe pb/block-1 --namespace=privacy-example
 Add a privacy claim:
 
 ```bash
-kubectl apply -f evaluation/examples/dpf-base/add-claim-1.yaml
+kubectl apply -f examples/privacyresource/dpf-base/add-claim-1.yaml
 ```
 
 Describe the claim:
@@ -203,8 +203,8 @@ On your first terminal, you should see that the scheduler detected the claim and
 
 Finally, clean up:
 ```bash
-kubectl delete -f evaluation/examples/dpf-base/add-claim-1.yaml 
-kubectl delete -f evaluation/examples/dpf-base/add-block.yaml
+kubectl delete -f examples/privacyresource/dpf-base/add-claim-1.yaml 
+kubectl delete -f examples/privacyresource/dpf-base/add-block.yaml
 kubectl delete namespace privacy-example
 ```
 
@@ -215,6 +215,7 @@ We now have a proper abstraction to manage privacy as a native Kubernetes resour
 ### 2.1. Structure of the repository
 
 - `evaluation`: Scripts to reproduce the results from the paper
+- `examples`: Examples for different parts of our work
 - `privatekube`: Python package to interact with the system
 - `system`: Components to deploy PrivateKube on a cluster
 
@@ -291,18 +292,57 @@ To create a workload from the individual models, we have to run them for various
 First, you can generate the experiments (with nice parameters and a local path to store the results) with:
 
 ```bash
-python run.py generate
+python models.py generate
 ```
 
 Then, you can run all the experiments with:
 
 ```bash
-python run.py all
+python models.py all
 ```
 
 #### End-to-end macrobenchmark
 
-*The code to evaluate the scheduler on the workloads has not been released yet.*
+The `evaluation/macrobenchmark/scheduling` folder contains a Go stub that mimicks the Kubernetes API. We can then deploy the privacy resource and run the real scheduler over workload traces The traces are generated with `models.py` as above. This is much faster than using a full cluster.
+
+To compile the stub, please go into the `scheduling` folder and run:
+
+```bash
+go build
+```
+
+The `evaluation/macrobenchmark/scheduler.py` file provides a command-line interface to interact with the stub. You can run `python scheduler.py --help` for more information.
+
+For instance, you can run a workload (in fast-forward) with pipelines drawn from the distribution described in the paper, for different values of N by running:
+
+```bash
+python scheduler.py schedulers --config-path config.yaml --keep-raw-logs True
+```
+
+Where `config.yaml` is:
+
+```yaml
+N:
+  - 1
+  - 100
+  - 200
+  - 300
+  - 400
+  - 500
+timeout: 5
+epsilon: 10
+delta: 1e-7
+rdp:
+  - 1
+  - 0
+n: 50
+t: 30_000
+elephants: "/home/<USERNAME>/PrivateKube/evaluation/macrobenchmark/workload/runs/event/elephants"
+mice: "/home/<USERNAME>/PrivateKube/evaluation/macrobenchmark/workload/runs/event/mice-laplace"
+mice_ratio: 0.75
+m: 300
+b: 10
+```
 
 ### 2.3. Modifying the scheduler
 

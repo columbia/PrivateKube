@@ -1,0 +1,67 @@
+name: Commit uniform consume
+description: Commit a budget on a merged dataset
+inputs:
+  - {
+      name: claim,
+      type: Data,
+      description: "Artifact: JSON containing claim name.",
+    }
+  - {
+      name: result,
+      type: Data,
+      description: "Artifact: the result of the algorithm that consumed the budget.",
+    }
+  - {
+      name: epsilon,
+      type: Float,
+      description: "Consume epsilon_min = epsilon_max for each block according to the allocation sampling.",
+    }
+  - {
+      name: delta,
+      type: Float,
+      description: "Consume delta_min = delta_max for each block according to the allocation sampling",
+    }
+  - {
+      name: policy,
+      type: String,
+      description: "allOrNothing=true or allOrNothing=false",
+    }
+  - {
+      name: timeout,
+      type: Integer,
+      description: "Timeout after which the component fails if the scheduler did not reply.",
+    }
+  - {
+      name: gcs_prefix,
+      type: String,
+      description: "Prefix of an output bucket",
+    }
+outputs:
+  - {
+      name: gcs_output,
+      type: Data,
+      description: "Artifact: contains a URI where the result is published.",
+    }
+
+implementation:
+  container:
+    image: DOCKER_IMAGE_PLACEHOLDER
+    command:
+      - python3
+      - consume_uniform.py
+      - --claim
+      - inputPath: claim
+      - --result
+      - inputPath: result
+      - --epsilon
+      - inputValue: epsilon
+      - --delta
+      - inputValue: delta
+      - --policy
+      - inputValue: policy
+      - --timeout
+      - inputValue: timeout
+      - --gcs_unique_path
+      - concat: [{ inputValue: gcs_prefix }, "{{workflow.uid}}_{{pod.name}}"]
+      - --gcs_output
+      - outputPath: gcs_output

@@ -1,15 +1,16 @@
 package main
 
 import (
-	"columbia.github.com/sage/privacycontrollers/pkg/blockclaimsync"
-	"columbia.github.com/sage/privacycontrollers/pkg/datablocklifecycle"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	privacyinformers "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions"
 	"context"
 	"flag"
+	"time"
+
+	"columbia.github.com/privatekube/privacycontrollers/pkg/blockclaimsync"
+	"columbia.github.com/privatekube/privacycontrollers/pkg/datablocklifecycle"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	privacyinformers "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-	"time"
 
 	// uncomment it if running with gcloud
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"

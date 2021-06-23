@@ -541,6 +541,44 @@ def truncate(
 
 
 @app.command()
+def chunk(
+    h5_input_path: str = typer.Option(
+        "", help="Path to the preprocessed data (as a single h5 file)"
+    ),
+    output_dir: str = typer.Option(
+        "", help="Directory to store the h5 blocks (on file per block)"
+    ),
+    n_days: int = typer.Option(50, help="Number of days to keep."),
+):
+    h5_input_path = (
+        Path(h5_input_path)
+        if h5_input_path
+        else DEFAULT_DATA_PATH.joinpath("reviews.h5")
+    )
+    output_dir = (
+        Path(output_dir) if output_dir else DEFAULT_DATA_PATH.joinpath("blocks")
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"Extracting the first {n_days} days of the dataset.")
+    with h5py.File(h5_input_path, "r") as h:
+        blocks = h.keys()
+        for day in tqdm(range(n_days)):
+            for user_bucket in range(N_USER_BUCKETS):
+                blockname = f"{day}-{user_bucket}"
+                m = h[blockname]
+                if blockname in blocks:
+                    with h5py.File(output_dir.joinpath(f"{blockname}.h5"), "w") as out:
+                        b = out.create_dataset(
+                            "block",
+                            m.shape,
+                            dtype=np.int32,
+                            compression="gzip",
+                        )
+                        b[...] = m
+
+
+@app.command()
 def count(
     h5_path: str = typer.Option(
         "", help="Path to the preprocessed data (as a single h5 file)"

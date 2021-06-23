@@ -28,6 +28,43 @@ type PrivacyBudget struct {
 	Renyi  RenyiBudget         `json:"renyi,omitempty"`
 }
 
+func NewPrivacyBudget(epsilon float64, delta float64, renyi bool) PrivacyBudget {
+	epsDelBudget := EpsilonDeltaBudget{
+		Epsilon: epsilon,
+		Delta:   delta,
+	}
+	if renyi {
+		return PrivacyBudget{
+			EpsDel: nil,
+			Renyi:  epsDelBudget.ToRenyi(),
+		}
+	} else {
+		return PrivacyBudget{
+			EpsDel: &epsDelBudget,
+			Renyi:  nil,
+		}
+
+	}
+}
+
+func NewPrivacyBudgetTruncated(epsilon float64, delta float64, gamma float64) PrivacyBudget {
+	epsDelBudget := EpsilonDeltaBudget{
+		Epsilon: epsilon,
+		Delta:   delta,
+	}
+	if gamma >= 0 {
+		return PrivacyBudget{
+			EpsDel: nil,
+			Renyi:  epsDelBudget.ToRenyiTruncated(gamma),
+		}
+	} else {
+		return PrivacyBudget{
+			EpsDel: &epsDelBudget,
+			Renyi:  nil,
+		}
+	}
+}
+
 type EpsilonDeltaBudget struct {
 	Epsilon float64 `json:"epsilon"`
 	Delta   float64 `json:"delta"`
@@ -131,6 +168,26 @@ func (budget EpsilonDeltaBudget) ToRenyi() RenyiBudget {
 	res[i].Alpha = RenyiAlphas[i]
 	res[i].Epsilon = budget.Epsilon
 
+	return res
+}
+
+// ToRenyiTruncated drops the RDP orders that have less (or equal) than gamma * Epsilon
+// (use it to increase performance when you create new blocks)
+// If gamma = 0, this will only remove empty alphas
+func (budget EpsilonDeltaBudget) ToRenyiTruncated(gamma float64) RenyiBudget {
+	res := make(RenyiBudget, 0, len(RenyiAlphas))
+	logDelta := math.Log(budget.Delta)
+	i := 0
+	for _, alpha := range RenyiAlphas[:len(RenyiAlphas)-1] {
+		epsilon := budget.Epsilon + logDelta/(alpha-1)
+		if epsilon > gamma*budget.Epsilon {
+			res = append(res, RenyiBudgetBlock{Alpha: alpha, Epsilon: epsilon})
+			i++
+		}
+	}
+
+	// alpha = 1e6 is special. It is used to represent +inf
+	res = append(res, RenyiBudgetBlock{Alpha: RenyiAlphas[len(RenyiAlphas)-1], Epsilon: budget.Epsilon})
 	return res
 }
 
@@ -510,11 +567,10 @@ func (budget RenyiBudget) HasEnough(other RenyiBudget) bool {
 	return false
 }
 
-// HasEnough returns true iif the curve of `budget` is greater or equal to `other` for one alpha (with EmptyThreshold margin)
+// HasEnoughInAllAlpha returns true iif the curve of `budget` is greater or equal to `other` for all alphas (with EmptyThreshold margin)
 func (budget RenyiBudget) HasEnoughInAllAlpha(other RenyiBudget) bool {
 	b, c := ReduceToSameSupport(budget, other)
 	for i := range b {
-		// This solution is not super satisfying either, but at least it's safe. E.g. asking 1.0 out of 10.0 when N=10 would be unfair.
 		if b[i].Epsilon < c[i].Epsilon+EmptyThreshold {
 			return false
 		}
@@ -576,6 +632,13 @@ func (budget PrivacyBudget) IsRenyiType() bool {
 func (budget *PrivacyBudget) ToRenyi() {
 	if budget.IsEpsDelType() {
 		budget.Renyi = budget.EpsDel.ToRenyi()
+		budget.EpsDel = nil
+	}
+}
+
+func (budget *PrivacyBudget) ToRenyiTruncated(gamma float64) {
+	if budget.IsEpsDelType() {
+		budget.Renyi = budget.EpsDel.ToRenyiTruncated(gamma)
 		budget.EpsDel = nil
 	}
 }
@@ -891,4 +954,43 @@ func (budget PrivacyBudget) MoreThan(other PrivacyBudget) bool {
 	}
 
 	panic("budget type is incompatible")
+}
+
+func (budget PrivacyBudget) ToString() string {
+	if budget.IsEpsDelType() {
+		return fmt.Sprintf("%v", *budget.EpsDel)
+	}
+
+	if budget.IsRenyiType() {
+		return fmt.Sprintf("%v", budget.Renyi)
+	}
+
+	return "{}"
+}
+
+func (budget PrivacyBudget) Copy() PrivacyBudget {
+	if budget.IsEpsDelType() {
+		newBudget := &EpsilonDeltaBudget{
+			Epsilon: budget.EpsDel.Epsilon,
+			Delta:   budget.EpsDel.Delta,
+		}
+		return PrivacyBudget{
+			EpsDel: newBudget,
+		}
+	}
+
+	if budget.IsRenyiType() {
+		newBudget := make(RenyiBudget, 0, len(budget.Renyi))
+		for i := 0; i < len(budget.Renyi); i++ {
+			newBudget = append(newBudget, RenyiBudgetBlock{
+				Alpha:   budget.Renyi[i].Alpha,
+				Epsilon: budget.Renyi[i].Epsilon,
+			})
+		}
+		return PrivacyBudget{
+			Renyi: newBudget,
+		}
+	}
+
+	return PrivacyBudget{}
 }

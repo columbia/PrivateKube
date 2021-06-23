@@ -1,0 +1,19 @@
+name: GCS Download
+description: Download a list of files from GCS - one URI per line
+inputs:
+  - { name: input_path, type: Data }
+outputs:
+  - { name: output_path }
+implementation:
+  container:
+    image: google/cloud-sdk
+    command:
+      - bash
+      - -ex
+      - -c
+      - |
+        mkdir -p "$1"
+                    
+        cat "$0" | gsutil -m cp -I "$1"
+      - inputPath: input_path
+      - outputPath: output_path

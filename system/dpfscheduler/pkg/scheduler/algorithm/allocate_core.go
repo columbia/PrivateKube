@@ -3,10 +3,10 @@ package algorithm
 import (
 	"fmt"
 
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"k8s.io/klog"
 )
 
@@ -125,6 +125,7 @@ func (core *CoreAlgorithm) p1AcquireBudget(requestViewer framework.RequestViewer
 
 	}
 	// subtract from available budget
+	// NOTE: in the Renyi case, some orders of the Available budget can become negative (but not all).
 	block.Status.AvailableBudget.ISub(acquiringBudget)
 
 	// add locked budget
@@ -173,7 +174,7 @@ func (core *CoreAlgorithm) p2AcquireBudget(requestViewer framework.RequestViewer
 
 	}
 
-	klog.Infof("Allocating %s from %s", block.Status.AvailableBudget, acquiringBudget)
+	// klog.Infof("Allocating %s from %s", block.Status.AvailableBudget, acquiringBudget)
 
 	// subtract from available budget
 	// With RDP, acquiringBudget can be greater than the available budget on some alphas,

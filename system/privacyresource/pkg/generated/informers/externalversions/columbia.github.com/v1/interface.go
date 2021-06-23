@@ -24,7 +24,7 @@ SOFTWARE.
 package v1
 
 import (
-	internalinterfaces "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
+	internalinterfaces "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

@@ -24,7 +24,7 @@ SOFTWARE.
 package fake
 
 import (
-	v1 "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
+	v1 "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/typed/columbia.github.com/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

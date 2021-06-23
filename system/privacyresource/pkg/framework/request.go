@@ -1,8 +1,9 @@
 package framework
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
 	"strconv"
+
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 type RequestHandler struct {

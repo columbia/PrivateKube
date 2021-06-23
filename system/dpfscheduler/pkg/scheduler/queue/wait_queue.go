@@ -1,8 +1,9 @@
 package queue
 
 import (
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"fmt"
+
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"k8s.io/klog"
 )
 

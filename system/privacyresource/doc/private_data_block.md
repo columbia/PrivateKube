@@ -86,7 +86,7 @@ spec:
 kubectl apply -f block-1.yaml
 ```
 
-In addition, Kubernetes provides code generator (`kubernetes/code-generator`) to create the clients of custom resource. This has been done in the `sage` project under `privacyresource` folder.
+In addition, Kubernetes provides code generator (`kubernetes/code-generator`) to create the clients of custom resource. This has been done in the `privatekube` project under `privacyresource` folder.
 
 The struct of Private Data Block is defined resemble to the `yaml` format, under the directory `privacyresource/pkg/apis/columbia.github.com/v1/types.go`.
 
@@ -131,8 +131,8 @@ Its client is created under the directory of `privacyresource/pkg/generated`. He
 package main
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
 	"flag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"

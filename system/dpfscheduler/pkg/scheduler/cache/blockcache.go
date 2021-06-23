@@ -1,11 +1,12 @@
 package cache
 
 import (
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
 	"fmt"
-	"k8s.io/klog"
 	"sync"
+
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"k8s.io/klog"
 )
 
 type PrivateDataBlockCache struct {
@@ -16,12 +17,20 @@ type PrivateDataBlockCache struct {
 	//assumedPods map[string]bool
 	// a map from pod key to podState.
 	//podStates map[string]*podState
-	blocks map[string]*BlockState
+	blocks  map[string]*BlockState
+	counter *StreamingCounter
 }
 
-func NewPrivateDataBlockCache() *PrivateDataBlockCache {
+func NewPrivateDataBlockCache(counterOptions *StreamingCounterOptions) *PrivateDataBlockCache {
+	var c *StreamingCounter
+	if counterOptions == nil {
+		c = nil
+	} else {
+		c = NewStreamingCounter(counterOptions)
+	}
 	cache := PrivateDataBlockCache{
-		blocks: make(map[string]*BlockState),
+		blocks:  make(map[string]*BlockState),
+		counter: c,
 	}
 
 	return &cache
@@ -29,15 +38,24 @@ func NewPrivateDataBlockCache() *PrivateDataBlockCache {
 
 func (cache *PrivateDataBlockCache) Add(block *columbiav1.PrivateDataBlock) (*BlockState, error) {
 	blockId := util.GetBlockId(block)
+
 	blockDefaultInitialization(block)
+
+	// If the counter is activated, try to update the count
+	if cache.counter != nil {
+		// We modify the counter and the block inplace
+		cache.counter.UpdateCount(block)
+	}
+
 	if state, ok := cache.blocks[blockId]; ok {
-		klog.Warningf("data block %s has already in cache, which will be override", blockId)
+		klog.Warningf("data block %s was already in cache and will be overriden", blockId)
 		return state, state.Update(block)
 	} else {
 		state = NewBlockState(block)
 		cache.blocks[blockId] = state
 		return state, nil
 	}
+
 }
 
 func (cache *PrivateDataBlockCache) Update(block *columbiav1.PrivateDataBlock) (*BlockState, error) {
@@ -138,7 +156,6 @@ func blockDefaultInitialization(block *columbiav1.PrivateDataBlock) {
 
 	if len(block.Status.AcquiredBudgetMap) == 0 && len(block.Status.CommittedBudgetMap) == 0 &&
 		block.Status.AvailableBudget.IsEmpty() && block.Status.PendingBudget.IsEmpty() {
-
 		block.Status.PendingBudget = block.Spec.InitialBudget
 	}
 }

@@ -1,4 +1,4 @@
-module columbia.github.com/sage/privacyresource
+module columbia.github.com/privatekube/privacyresource
 
 go 1.14
 

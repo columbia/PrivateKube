@@ -1,11 +1,12 @@
 package cache
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"fmt"
-	"k8s.io/klog"
 	"sync"
+
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"k8s.io/klog"
 )
 
 type ClaimCache struct {

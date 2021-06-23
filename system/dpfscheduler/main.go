@@ -1,11 +1,11 @@
 package main
 
 import (
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler"
-	"columbia.github.com/sage/privacycontrollers/pkg/blockclaimsync"
-	"columbia.github.com/sage/privacycontrollers/pkg/datablocklifecycle"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler"
+	"columbia.github.com/privatekube/privacycontrollers/pkg/blockclaimsync"
+	"columbia.github.com/privatekube/privacycontrollers/pkg/datablocklifecycle"
 
-	//"columbia.github.com/sage/privacycontrollers/pkg/datablocklifecycle"
+	//"columbia.github.com/privatekube/privacycontrollers/pkg/datablocklifecycle"
 	"context"
 	"flag"
 	"time"
@@ -16,8 +16,8 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	privacyinformers "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	privacyinformers "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions"
 
 	// uncomment it if running with gcloud
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -30,7 +30,7 @@ var (
 	n                 int
 	timeout           int64
 	releasingDuration int64
-	releasingPeriod   int
+	releasingPeriod   int64
 )
 
 func main() {
@@ -66,10 +66,11 @@ func main() {
 	coreRecorder := coreBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "privacyscheduler"})
 
 	var privacyScheduler *scheduler.DpfScheduler
+	var option scheduler.DpfSchedulerOption
 	var blockLifecycleOption datablocklifecycle.BlockLifecycleOption
 
 	if mode == scheduler.TScheme {
-		option := scheduler.DefaultTSchemeOption()
+		option = scheduler.DefaultTSchemeOption()
 		if releasingPeriod >= 0 {
 			option.DefaultReleasingPeriod = releasingPeriod
 		}
@@ -82,15 +83,12 @@ func main() {
 			option.DefaultTimeout = timeout
 		}
 
-		privacyScheduler, _ = scheduler.New(privacyResourceClient, privateDataBlockInformer,
-			privacyBudgetClaimInformer, coreRecorder, ctx.Done(), option)
-
 		blockLifecycleOption = datablocklifecycle.BlockLifecycleOption{
 			SchedulingPolicy:           datablocklifecycle.DpfT,
 			DeletionGracePeriodSeconds: 30,
 		}
 	} else {
-		option := scheduler.DefaultNSchemeOption()
+		option = scheduler.DefaultNSchemeOption()
 		if n > 0 {
 			option.N = n
 		}
@@ -99,14 +97,14 @@ func main() {
 			option.DefaultTimeout = timeout
 		}
 
-		privacyScheduler, _ = scheduler.New(privacyResourceClient, privateDataBlockInformer,
-			privacyBudgetClaimInformer, coreRecorder, ctx.Done(), option)
-
 		blockLifecycleOption = datablocklifecycle.BlockLifecycleOption{
 			SchedulingPolicy:           datablocklifecycle.DpfN,
 			DeletionGracePeriodSeconds: 30,
 		}
 	}
+
+	privacyScheduler, _ = scheduler.New(privacyResourceClient, privateDataBlockInformer,
+		privacyBudgetClaimInformer, coreRecorder, ctx.Done(), option)
 
 	blockLifecycleController := datablocklifecycle.NewBlockController(privacyResourceClient, blockLifecycleInformer, blockLifecycleOption)
 	klog.Info("Block Lifecycle Controller is ready to run")
@@ -133,5 +131,5 @@ func init() {
 	flag.IntVar(&n, "n", -1, "Default N value for DPF N mode")
 	flag.Int64Var(&timeout, "timeout", -1, "Default timeout for pending requests. Unit is millisecond.")
 	flag.Int64Var(&releasingDuration, "releasingDuration", -1, "Default releasing duration for pending requests for DPF T mode. Unit is millisecond.")
-	flag.IntVar(&releasingPeriod, "releasingPeriod", -1, "Default releasing period for pending requests for DPF T mode. Unit is sec.")
+	flag.Int64Var(&releasingPeriod, "releasingPeriod", -1, "Default releasing period for pending requests for DPF T mode. Unit is millisecond.")
 }

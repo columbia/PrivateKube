@@ -24,8 +24,8 @@ SOFTWARE.
 package columbia
 
 import (
-	v1 "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
-	internalinterfaces "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
+	v1 "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
+	internalinterfaces "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

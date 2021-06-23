@@ -26,7 +26,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
+	v1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

@@ -1,8 +1,9 @@
 package util
 
 import (
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
 	"reflect"
+
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 )
 
 func GetBlockId(block *columbiav1.PrivateDataBlock) string {

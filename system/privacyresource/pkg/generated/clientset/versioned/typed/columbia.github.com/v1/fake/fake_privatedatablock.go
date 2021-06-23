@@ -26,7 +26,7 @@ package fake
 import (
 	"context"
 
-	columbiagithubcomv1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
+	columbiagithubcomv1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

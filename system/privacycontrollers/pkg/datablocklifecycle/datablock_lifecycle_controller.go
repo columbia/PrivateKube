@@ -1,12 +1,13 @@
 package datablocklifecycle
 
 import (
-	"columbia.github.com/sage/privacycontrollers/pkg/tools/timer"
-	"columbia.github.com/sage/privacycontrollers/pkg/tools/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
-	informer "columbia.github.com/sage/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
 	"context"
+
+	"columbia.github.com/privatekube/privacycontrollers/pkg/tools/timer"
+	"columbia.github.com/privatekube/privacycontrollers/pkg/tools/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	informer "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 )

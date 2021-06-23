@@ -5,13 +5,13 @@ import (
 	"math"
 	"sync"
 
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/updater"
-	"columbia.github.com/sage/dpfscheduler/pkg/scheduler/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
+	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"k8s.io/klog"
 )
 
@@ -314,14 +314,14 @@ func (dpf *DpfBatch) batchCompleteReserving(blockStates []*cache.BlockState, req
 		for blockId, account := range allocatedBudgets {
 			reserved := claim.Status.ReservedBudgets[blockId].Add(account.Reserved)
 			claim.Status.ReservedBudgets[blockId] = reserved
-			klog.Infof("New reserved budget map for [%s]:\b%s", blockId, reserved)
+			// klog.Infof("New reserved budget map for [%s]:\b%s", blockId, reserved)
 		}
 
 		return nil
 	}, requestHandler.ClaimHandler)
 
 	if err == nil {
-		klog.Infof("succeed to append a success response to the privacy budget claim [%s]", requestHandler.ClaimHandler.GetId())
+		klog.Infof("succeed to append a pending response to the privacy budget claim [%s]", requestHandler.ClaimHandler.GetId())
 	}
 
 	requestViewer := requestHandler.Viewer()

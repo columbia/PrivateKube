@@ -27,8 +27,8 @@ import (
 	"context"
 	"time"
 
-	v1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	scheme "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned/scheme"
+	v1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	scheme "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

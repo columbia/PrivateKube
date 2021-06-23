@@ -1,16 +1,17 @@
 package updater
 
 import (
-	"columbia.github.com/sage/privacycontrollers/pkg/tools/util"
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
-	privacyclientset "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
 	"context"
 	"fmt"
+	"strconv"
+
+	"columbia.github.com/privatekube/privacycontrollers/pkg/tools/util"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
-	"strconv"
 )
 
 var (

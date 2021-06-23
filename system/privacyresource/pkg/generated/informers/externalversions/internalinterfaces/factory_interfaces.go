@@ -26,7 +26,7 @@ package internalinterfaces
 import (
 	time "time"
 
-	versioned "columbia.github.com/sage/privacyresource/pkg/generated/clientset/versioned"
+	versioned "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

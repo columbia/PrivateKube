@@ -5,8 +5,8 @@ import (
 	"math"
 	"sync"
 
-	columbiav1 "columbia.github.com/sage/privacyresource/pkg/apis/columbia.github.com/v1"
-	"columbia.github.com/sage/privacyresource/pkg/framework"
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	"github.com/wangjohn/quickselect"
 )
 
@@ -56,7 +56,6 @@ func (slice blockShareSlice) Less(i, j int) bool {
 func (slice blockShareSlice) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
-
 
 func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 	claimState.Lock()

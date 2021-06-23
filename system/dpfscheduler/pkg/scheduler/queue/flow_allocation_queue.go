@@ -1,11 +1,12 @@
 package queue
 
 import (
-	"columbia.github.com/sage/privacyresource/pkg/framework"
 	"container/list"
 	"fmt"
 	"sync"
 	"time"
+
+	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 )
 
 type flowAllocationElement struct {
