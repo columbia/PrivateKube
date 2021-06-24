@@ -6,15 +6,15 @@ budget is a *scarce resource* that must be carefully managed to maximize the num
 PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  The abstractions we design for the privacy resource mirror those defined by Kubernetes for traditional resources, but there are also major differences. For example, traditional compute resources are replenishable while privacy is not: a CPU can be regained after a model finishes execution while privacy
 budget cannot. This distinction forces a re-design of the scheduler.  We developed *Dominant Private Block Fairness (DPF)* -- a variant of the popular *Dominant Resource Fairness (DRF)* algorithm -- that is geared toward the non-replenishable privacy resource but enjoys similar theoretical properties as DRF.
 
-PrivateKube's design, implementation, and evaluation are described in a paper published at OSDI 2021: [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo).  A local copy of this paper is available [here]({{ site.baseurl }}/papers/osdi2021privatekube.pdf).  An extended version of this paper, with some details we omitted from the conference paper, will be made available shortly.
+PrivateKube's design, implementation, and evaluation are described in a paper published at OSDI 2021: [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo).  A local copy of this paper is available [here](papers/osdi2021privatekube.pdf).  An extended version of this paper, with some details we omitted from the conference paper, will be made available shortly.
 
 This repository contains the code we release as a reusable and extensible artifact of our research.
 
 **Status of the code release.** Currently, we provide:
 - The privacy resource implementation (supporting both traditional DP and Renyi DP)
 - The DPF scheduler (supporting both traditional DP annd Renyi DP)
-- The microbenchmark used in our evaluation (see [OSDI paper]({{ site.baseurl }}/papers/osdi2021privatekube.pdf))
-- The end-to-end macrobenchmark used in our evaluation (see [OSDI paper]({{ site.baseurl }}/papers/osdi2021privatekube.pdf))
+- The microbenchmark used in our evaluation (see [OSDI paper](papers/osdi2021privatekube.pdf))
+- The end-to-end macrobenchmark used in our evaluation (see [OSDI paper](papers/osdi2021privatekube.pdf))
 - The DP workloads, including dataset, models and parameters, used for the macrobenchmark
 
 We do not provide *yet* but will do so in the near future:
