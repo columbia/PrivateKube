@@ -46,7 +46,6 @@ func NewResourceUpdater(
 	}
 }
 
-// TODO: use this stuff to update the counter?
 func (updater *ResourceUpdater) ApplyOperationToDataBlock(
 	operation func(*columbiav1.PrivateDataBlock) error,
 	blockHandler framework.BlockHandler) error {

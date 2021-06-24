@@ -29,7 +29,6 @@ type StreamingCounter struct {
 	n_alpha       map[int]float64
 }
 
-// TODO: constructor to build from target budget?
 type StreamingCounterOptions struct {
 	LaplaceNoise     float64
 	MaxNumberOfTicks int
@@ -111,7 +110,6 @@ func bin_digit(t int, i int) int {
 	return (t >> i) % 2
 }
 
-// TODO: RDP analysis of the streaming counter
 /// GetLaplaceBudgetAs returns the budget spent by the counter for a given block, either in RDP or epsilon-delta DP
 func (counter *StreamingCounter) GetLaplaceBudgetAs(target *columbiav1.PrivacyBudget) columbiav1.PrivacyBudget {
 	// Cache the result of the computation assuming all the blocks have the same tracking set of RDP orders
@@ -121,14 +119,14 @@ func (counter *StreamingCounter) GetLaplaceBudgetAs(target *columbiav1.PrivacyBu
 
 	var budget columbiav1.PrivacyBudget
 	if target.IsEpsDelType() {
-		budget = columbiav1.NewPrivacyBudget(1/counter.LaplaceNoise, 0, false)
+		budget = columbiav1.NewPrivacyBudget(float(counter.n_bits)/counter.LaplaceNoise, 0, false)
 	} else {
-		// RDP curve of the Laplace mechanism over the same set of alphas
+		// See extended paper for the RDP curve, which corresponds to the sum of log T curves of the Laplace mechanism
 		b := make(columbiav1.RenyiBudget, 0, len(target.Renyi))
 		target.Copy()
 		for i := range target.Renyi {
 			alpha := target.Renyi[i].Alpha
-			epsilon := laplaceRDP(counter.LaplaceNoise, alpha)
+			epsilon := float(counter.n_bits) * laplaceRDP(counter.LaplaceNoise, alpha)
 			if !math.IsInf(epsilon, 0) && !math.IsNaN(epsilon) {
 				b = append(b, columbiav1.RenyiBudgetBlock{
 					Alpha:   alpha,
