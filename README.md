@@ -13,12 +13,12 @@ This repository contains the code we release as a reusable and extensible artifa
 **Status of the code release.** Currently, we provide:
 - The privacy resource implementation (supporting both traditional DP and Renyi DP)
 - The DPF scheduler (supporting both traditional DP annd Renyi DP)
-- The microbenchmark used in our evaluation (see [OSDI paper](papers/osdi2021privatekube.pdf))
 - The end-to-end macrobenchmark used in our evaluation (see [OSDI paper](papers/osdi2021privatekube.pdf))
 - The DP workloads, including dataset, models and parameters, used for the macrobenchmark
 
-We do not provide *yet* but will do so in the near future:
+We do not provide yet but will do so in the near future:
 - The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline
+- The microbenchmark used in our evaluation (see [OSDI paper](papers/osdi2021privatekube.pdf))
 
 
 ## 1. Getting started
