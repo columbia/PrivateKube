@@ -1,6 +1,3 @@
-# PrivateKube
-
-
 Machine learning (ML) models trained on personal data have been shown to leak information about users. Differential privacy (DP) enables model training with a guaranteed bound on this leakage. Each new model trained with DP increases the bound on data leakage and can be seen as consuming part of a global privacy budget that should not be exceeded. This
 budget is a *scarce resource* that must be carefully managed to maximize the number of successfully trained models.
 
