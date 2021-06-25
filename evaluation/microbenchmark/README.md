@@ -1,5 +1,5 @@
 ## How to reproduce microbenchmark in PrivateKute paper
-Before get started, make sure to install dpsched package under ./simulator.
+Before getting started, make sure to install dpsched package under ./simulator.
 
 ### Reproduce microbenchmark experiments
 ./microbench_single_block.py contains the script to reproduce single static block workload experiment with various DP scheduling policies, for both epsilon-delta DP composition and Renyi DP composition. 
