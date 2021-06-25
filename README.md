@@ -218,7 +218,7 @@ We now have a proper abstraction to manage privacy as a native Kubernetes resour
 - `simulator`: Simulator for DPF algorithm used in our microbenchmark evaluation
 
 We next detail how to use the macrobenchmark as a demonstration of PrivateKube itself.
-Details of how to use the similator to performed controlled evaluation of DPF and other privacy scheduling algorithms are in the `simulator` and `evaluation/microbenchmark` Readme's.
+Details of how to use the similator for controlled evaluation of DPF and other privacy scheduling algorithms are in the `simulator` and `evaluation/microbenchmark` Readme's.
 
 ### 2.2. Macrobenchmark
 
