@@ -1,4 +1,4 @@
-## Privacy Budget Scheduling Simulator
+# Privacy Budget Scheduling Simulator
 
 Our microbenchmark evaluation of the DPF privacy budget scheduling algorithm uses a simulator, whose code is available here.  This simulator supports controlled evaluation of several scheduling algorithms we develop for differential privacy budgets, including: round-robin, first-come-first-serve, and DPF algorithms. For more information about the algorithms and our evaluation, please refer to our [PrivateKube paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf).
 
@@ -28,7 +28,7 @@ pip install .[plot]
 
 
 ## Examples
-## The minimal example
+### The minimal example
 `./examples/simulator/minimal_example.py` gives a quick start. There are two key concepts in the simulation program:
 1. The simulation model: This implements how different components in the systems behave and interact with each other. One can import it via `from dpsched import Top`
 2. The configuration dictionary: a dictionary that specifies many aspects of simulation behavior. for configuration details, please refer to the comments in minimal_example.py
