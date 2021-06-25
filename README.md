@@ -1,24 +1,15 @@
 # PrivateKube
 
-Artifact release for the OSDI 2021 paper: "Privacy Budget Scheduling". Find more context on our [webpage](https://systems.cs.columbia.edu/PrivateKube/). 
+PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI 2021 paper titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo).
 
-## 0. Overview
-PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.
-
-PrivateKube's design, implementation, and evaluation are described in a paper published at OSDI 2021: [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo).  A local copy of this paper is available [here](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf).  An extended version of this paper, with some details we omitted from the conference paper, will be made available shortly.
-
-This repository contains the code we release as a reusable and extensible artifact of our research.
-
-**Status of the code release.** Currently, we provide:
-- The privacy resource implementation (supporting both traditional DP and Renyi DP)
-- The DPF scheduler (supporting both traditional DP annd Renyi DP)
-- The end-to-end macrobenchmark used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf))
-- The DP workloads, including dataset, models and parameters, used for the macrobenchmark
+This repository contains the artifact release for the OSDI paper.  Currently, we provide:
+- The privacy resource implementation;
+- A new scheduler suitable for the privacy resource, which runs an algorithm called *Dominant Privacy Fairness (DPF)*; and
+- The macrobenchmark and DP workloads used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)).
 
 We do not provide yet but will do so in the near future:
-- The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline
-- The microbenchmark used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf))
-
+- The microbenchmark used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)); and
+- The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline.
 
 ## 1. Getting started
 
