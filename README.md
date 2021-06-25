@@ -47,7 +47,6 @@ microk8s start
 microk8s stop
 ```
 
-
 Export your configuration:
 ```bash
 microk8s config > ~/.kube/config
@@ -213,10 +212,13 @@ We now have a proper abstraction to manage privacy as a native Kubernetes resour
 ### 2.1. Structure of the repository
 
 - `evaluation`: Scripts to reproduce the results from the paper
-- `examples`: Examples for different parts of our work
+- `examples`: Usage examples for various components
 - `privatekube`: Python package to interact with the system
 - `system`: Components to deploy PrivateKube on a cluster
+- `simulator`: Simulator for DPF algorithm used in our microbenchmark evaluation
 
+We next detail how to use the macrobenchmark as a demonstration of PrivateKube itself.
+Details of how to use the similator to performed controlled evaluation of DPF and other privacy scheduling algorithms are in the `simulator` and `evaluation/microbenchmark` Readme's.
 
 ### 2.2. Macrobenchmark
 
@@ -353,3 +355,5 @@ go build
 
 ./dpfscheduler --kubeconfig "$HOME/.kube/config" --n=10
 ```
+
+
