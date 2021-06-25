@@ -1,4 +1,3 @@
-
 ## How to reproduce microbenchmark in PrivateKute paper
 Before get started, make sure to install dpsched package under ./simulator.
 
@@ -15,9 +14,8 @@ pypy ./microbench_single_block.py
 pypy ./microbench_multi_block.py
 ```
 
-The experiment results are saved under "./evaluation/microbenchmark/exp_result/some_work_space_name" 
+The experiment results are saved under "./evaluation/microbenchmark/exp_results/some_work_space_name" 
 
 ### Reproduce microbenchmark figures
 
 microbenchmark_figures_single_block.ipynb and microbenchmark_figures_multiple_block.ipynb show how to reproduce microbenchmark figures. You can read a notebook directly via (nbviwer)[https://nbviewer.jupyter.org/] without executing it. Note that these two notebooks download existing microbenchmark results and plot them directly. Therefore, we don't need to rerun microbenchmark experiments.
-

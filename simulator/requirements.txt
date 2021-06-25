@@ -1,0 +1,9 @@
+-e git+git://github.com/taoluo/simpy.git@osdi21_artifact#egg=simpy
+-e git+git://github.com/taoluo/desmod.git@osdi21_artifact#egg=desmod
+pyDigitalWaveTools
+notebook
+seaborn
+pytest
+
+
+
