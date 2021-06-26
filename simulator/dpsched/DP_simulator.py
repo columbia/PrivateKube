@@ -24,16 +24,16 @@ import timeit
 
 
 import math
-from .utils.rdp import (
+from dpsched.utils.rdp import (
     compute_rdp_epsilons_gaussian,
     gaussian_dp2sigma,
 )
 from operator import add, sub
 
 
-from .utils.misc import max_min_fair_allocation, defuse
-from .utils.configs import *
-from .utils.store import (
+from dpsched.utils.misc import max_min_fair_allocation, defuse
+from dpsched.utils.configs import *
+from dpsched.utils.store import (
     LazyAnyFilterQueue,
     DummyPutPool,
     DummyPool,
@@ -41,7 +41,7 @@ from .utils.store import (
     DummyPutLazyAnyFilterQueue,
     DummyFilterQueue,
 )
-from .utils.exceptions import *
+from dpsched.utils.exceptions import *
 import shutil
 import os
 
