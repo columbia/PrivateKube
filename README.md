@@ -1,20 +1,21 @@
 # PrivateKube
 
-PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our paper titled [Privacy Budget Scheduling](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf) and [talk presented in OSDI'21](https://www.usenix.org/conference/osdi21/presentation/luo).
+PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI'21 paper titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo) (PDF locally available [here](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf).
 
 
-## 0. Project structure
+## Project structure
+
 This repository contains the artifact release for the OSDI paper.  Currently, we provide:
 - [system](system/): The PrivateKube system, it includes the implementation of privacy resource and scheduling algorithm called *Dominant Privacy Fairness (DPF)*.
-- [privatekube](privatekube/): A python client for interaction with PrivateKube system and macrobenchmark evaluation.
-- [simulator](simulator/): A simulator for studying privacy scheduling algorithms and microbenchmark evaluation.
+- [privatekube](privatekube/): A python client for interaction with the PrivateKube system and performing macrobenchmark evaluation.
+- [simulator](simulator/): A simulator for microbenchmarking privacy scheduling algorithms in tightly controlled settings.
 - [examples](examples/): Usage examples for various components, please refer its [README](./examples/README.md) for details.
-- [evaluation](evaluation/): Scripts to reproduce macrobenchmark and microbenchmark evaluation results from our paper.
+- [evaluation](evaluation/): Scripts to reproduce the macrobenchmark and microbenchmark evaluation results from our paper.
 
 We do not provide yet but will do so in the near future:
 - The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline.
 
-## 1. Getting started with the PrivateKube system
+## 1. Getting started with PrivateKube
 
 This section explains how to install the system and walks through a simple example of interaction with the privacy resource. It should take less than 30 mins to complete.
 
