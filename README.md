@@ -213,7 +213,7 @@ kubectl delete namespace privacy-example
 
 We now have a proper abstraction to manage privacy as a native Kubernetes resource.  The next section will provide an end-to-end example for how to interact with the privacy resource through a real machine learning pipeline.  You can also refer to [evaluation/macrobenchmark](evaluation/macrobenchmark) to reproduce part of our evaluation of this resource and the DPF algorithm we developed for it.
 
-# Example PrivateKube Usage inn DP ML Pipeline
+# Example Usage in DP ML Pipeline
 
 To appear.
 
