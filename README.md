@@ -210,63 +210,9 @@ kubectl delete -f examples/privacyresource/dpf-base/add-block.yaml
 kubectl delete namespace privacy-example
 ```
 
-We now have a proper abstraction to manage privacy as a native Kubernetes resource. You can refer to the next section for more details, such as how to interact with this privacy resource through real machine learning pipelines.
+We now have a proper abstraction to manage privacy as a native Kubernetes resource.  The next section will provide an end-to-end example for how to interact with the privacy resource through a real machine learning pipeline.  You can also refer to [evaluation/macrobenchmark](evaluation/macrobenchmark) to reproduce part of our evaluation of this resource and the DPF algorithm we developed for it.
 
-## 2. Getting started with the simulator
+# Example PrivateKube Usage inn DP ML Pipeline
 
-This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF algorithms against baseline algorithms, including round-robin, first-come-first-serve. In addition to privacy budget, it also simulates the scheduling of compute resources, e.g. CPU, memory. 
-## 2.2 Setup simulator
-### Setup python environment
-Install conda, create and activate an isolated python environment "ae". 
-```bash
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-bash ~/miniconda.sh -b -p $HOME/miniconda
-eval "$($HOME/miniconda/bin/conda shell.bash hook)"
-conda init
-conda create -n ae  -c conda-forge pypy3.6 pip python=3.6 seaborn notebook -y
-conda activate ae
-```
-
-### Installation from source
-Install a Python package called dpsched via
- 
-```bash
-cd ./simulator
-pip install -r ./requirements.txt
-pip install .[plot]
-```
-
-
-## 2.3 Usage examples
-### The minimal simulation example
-`./examples/simulator/minimal_example.py` gives a quick start. There are two key concepts in the simulation program:
-1. The simulation model: This implements how different components in the systems behave and interact with each other. One can import it via `from dpsched import Top`
-2. The configuration dictionary: a dictionary that specifies many aspects of simulation behavior. for configuration details, please refer to the comments in minimal_example.py
-
- Basically, there are two steps in `./examples/simulator/minimal_example.py`.
- 1. Preparing the config dictionary
- 2. Calling `simulate(config, Top)`, where `config` is the config dict and `Top` is the simulation model.
-
-To run the minimal example.
-```bash
-cd ./examples/simulator
-python ./minimal_example.py
-``` 
-or, replace CPython with PyPy for better performance:
-```bash
-cd ./examples/simulator
-pypy ./minimal_example.py
-```
-
-The simulation program saves experiment results in a workspace specified by config dictionary. By default, it is saved under `./examples/exp_results/some_work_space_name`.
-
-### example on analyzing simulation results
-`dpsched.analysis` contains modules for collecting experiment result from workspace directory and plotting various figures.
-`evaluation/microbenchmark/microbenchmark_figures_single_block.ipynb` gives examples on how to use `dpsched.analysis` module with detailed comments. 
-
-## 2.4 How to reproduce microbenchmark results
-
-Instructions and code for how to use the simulator to reproduce the microbenchmark results in the PrivateKube paper are in [`evaluation/microbenchmark/README.md`](../evaluation/microbenchmark/README.md).
-
-
+To appear.
 
