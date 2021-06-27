@@ -3,7 +3,7 @@
 PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI'21 paper, titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo) (PDF locally available [here](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)).
 
 
-## Project structure
+## Repo structure
 
 This repository contains the artifact release for the OSDI paper.  Currently, we provide:
 - [system](system/): The PrivateKube system, which imolements the privacy resource and a new scheduling algorithm for it, called *Dominant Privacy Fairness (DPF)*.
