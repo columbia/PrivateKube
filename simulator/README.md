@@ -1,10 +1,11 @@
-(Note: this file is a copy of section "Getting started with the simulator" of [README](../README.md) in the root of the PrivateKube directory. Following instructions assume that the initial current directory is the root of the PrivateKube directory; paths are relative to that.)
+(Note: The following instructions assume that the initial current directory is the *root* of the PrivateKube directory; paths are relative to that.)
 
 # Privacy Budget Scheduling Simulator
 
-This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF algorithms against baseline algorithms, including round-robin, first-come-first-serve. In addition to privacy budget, it also simulates the scheduling of compute resources, e.g. CPU, memory. 
-## Setup
+This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF against baseline algorithms, including round-robin and first-come-first-serve.
 
+
+## Setup
 
 ### Setup python environment
 Install conda, create and activate an isolated python environment "ae". 
@@ -57,4 +58,3 @@ The simulation program saves experiment results in a workspace specified by conf
 ## How to reproduce microbenchmark in PrivateKube paper
 
 Instructions and code for how to use the simulator to reproduce the microbenchmark results in the PrivateKube paper are in [`evaluation/microbenchmark/README.md`](../evaluation/microbenchmark/README.md).
-
