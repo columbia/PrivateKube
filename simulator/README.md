@@ -1,7 +1,6 @@
 # Privacy Budget Scheduling Simulator
 
-Our microbenchmark evaluation of the DPF privacy budget scheduling algorithm uses a simulator, whose code is available here.  This simulator supports controlled evaluation of several scheduling algorithms we develop for differential privacy budgets, including: round-robin, first-come-first-serve, and DPF algorithms. For more information about the algorithms and our evaluation, please refer to our [PrivateKube paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf).
-
+This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF algorithms against baseline algorithms, including round-robin, first-come-first-serve. In addition to privacy budget, it also simulates the scheduling of compute resources, e.g. CPU, memory. 
 ## Setup
 
 (Note: These instructions assume that the initial current directory is the root of the PrivateKube directory; paths are relative to that.)
@@ -48,7 +47,7 @@ cd ./examples/simulator
 pypy ./minimal_example.py
 ```
 
-The simulation program saves experiment results in a workspace specified by config dictionary. By default, it is saved under `./examples/exp_result/some_work_space_name`.
+The simulation program saves experiment results in a workspace specified by config dictionary. By default, it is saved under `./examples/exp_results/some_work_space_name`.
 
 ### How to analyze simulation results
 `dpsched.analysis` contains modules for collecting experiment result from workspace directory and plotting various figures.

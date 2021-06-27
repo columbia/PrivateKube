@@ -18,4 +18,4 @@ The experiment results are saved under "./evaluation/microbenchmark/exp_results/
 
 ### Reproduce microbenchmark figures
 
-microbenchmark_figures_single_block.ipynb and microbenchmark_figures_multiple_block.ipynb show how to reproduce microbenchmark figures. You can read a notebook directly via (nbviwer)[https://nbviewer.jupyter.org/] without executing it. Note that these two notebooks download existing microbenchmark results and plot them directly. Therefore, we don't need to rerun microbenchmark experiments.
+microbenchmark_figures_single_block.ipynb and microbenchmark_figures_multiple_block.ipynb show how to reproduce microbenchmark figures. You can read a notebook directly via [nbviwer](https://nbviewer.jupyter.org/) without executing it. Note that these two notebooks download existing microbenchmark results and plot them directly. Therefore, we don't need to rerun microbenchmark experiments.

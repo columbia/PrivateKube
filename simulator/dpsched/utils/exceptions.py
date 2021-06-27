@@ -1,5 +1,3 @@
-
-
 #     Copyright (c) 2021. Tao Luo <tao.luo@columbia.edu>
 #
 #

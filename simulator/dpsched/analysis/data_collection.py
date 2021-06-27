@@ -19,7 +19,7 @@ import json
 import seaborn as sns
 import matplotlib.pyplot as plt
 import sqlite3
-from ..utils.configs import DpPolicyType
+from dpsched.utils.configs import DpPolicyType
 
 viridis = sns.color_palette("viridis")
 
