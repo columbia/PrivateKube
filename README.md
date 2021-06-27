@@ -6,7 +6,7 @@ PrivateKube is an extension to the popular Kubernetes datacenter orchestrator th
 ## Project structure
 
 This repository contains the artifact release for the OSDI paper.  Currently, we provide:
-- [system](system/): The PrivateKube system, it includes the implementation of privacy resource and scheduling algorithm called *Dominant Privacy Fairness (DPF)*.
+- [system](system/): The PrivateKube system, which imolements the privacy resource and a new scheduling algorithm for it, called *Dominant Privacy Fairness (DPF)*.
 - [privatekube](privatekube/): A python client for interaction with the PrivateKube system and performing macrobenchmark evaluation.
 - [simulator](simulator/): A simulator for microbenchmarking privacy scheduling algorithms in tightly controlled settings.
 - [examples](examples/): Usage examples for various components, please refer its [README](./examples/README.md) for details.
