@@ -1,17 +1,20 @@
 # PrivateKube
 
-PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI 2021 paper titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo).
+PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our paper titled [Privacy Budget Scheduling](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf) and [talk presented in OSDI'21](https://www.usenix.org/conference/osdi21/presentation/luo).
 
+
+## 0. Project structure
 This repository contains the artifact release for the OSDI paper.  Currently, we provide:
-- The privacy resource implementation;
-- A new scheduler suitable for the privacy resource, which runs an algorithm called *Dominant Privacy Fairness (DPF)*; and
-- The macrobenchmark and DP workloads used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)).
+- [system](system/): The PrivateKube system, it includes the implementation of privacy resource and scheduling algorithm called *Dominant Privacy Fairness (DPF)*.
+- [privatekube](privatekube/): A python client for interaction with PrivateKube system and macrobenchmark evaluation.
+- [simulator](simulator/): A simulator for studying privacy scheduling algorithms and microbenchmark evaluation.
+- [examples](examples/): Usage examples for various components, please refer its [README](./examples/README.md) for details.
+- [evaluation](evaluation/): Scripts to reproduce macrobenchmark and microbenchmark evaluation results from our paper.
 
 We do not provide yet but will do so in the near future:
-- The microbenchmark used in our evaluation (see [OSDI paper](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)); and
 - The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline.
 
-## 1. Getting started
+## 1. Getting started with the PrivateKube system
 
 This section explains how to install the system and walks through a simple example of interaction with the privacy resource. It should take less than 30 mins to complete.
 
@@ -209,12 +212,61 @@ kubectl delete namespace privacy-example
 
 We now have a proper abstraction to manage privacy as a native Kubernetes resource. You can refer to the next section for more details, such as how to interact with this privacy resource through real machine learning pipelines.
 
-## 2. Detailed instructions
+## 2. Getting started with the simulator
 
-Details of how to use the different parts of PrivateKube are included in each of the following directories:
-- [evaluation](evaluation/): Scripts to reproduce the results from the paper
-- [examples](examples/): Usage examples for various components
-- [privatekube](privatekube/): Python package to interact with the system
-- [system](system/): Components to deploy PrivateKube on a cluster
-- [simulator](simulator/): Simulator for DPF algorithm used in our microbenchmark evaluation
+This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF algorithms against baseline algorithms, including round-robin, first-come-first-serve. In addition to privacy budget, it also simulates the scheduling of compute resources, e.g. CPU, memory. 
+## 2.2 Setup simulator
+### Setup python environment
+Install conda, create and activate an isolated python environment "ae". 
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh -b -p $HOME/miniconda
+eval "$($HOME/miniconda/bin/conda shell.bash hook)"
+conda init
+conda create -n ae  -c conda-forge pypy3.6 pip python=3.6 seaborn notebook -y
+conda activate ae
+```
+
+### Installation from source
+Install a Python package called dpsched via
+ 
+```bash
+cd ./simulator
+pip install -r ./requirements.txt
+pip install .[plot]
+```
+
+
+## 2.3 Usage examples
+### The minimal simulation example
+`./examples/simulator/minimal_example.py` gives a quick start. There are two key concepts in the simulation program:
+1. The simulation model: This implements how different components in the systems behave and interact with each other. One can import it via `from dpsched import Top`
+2. The configuration dictionary: a dictionary that specifies many aspects of simulation behavior. for configuration details, please refer to the comments in minimal_example.py
+
+ Basically, there are two steps in `./examples/simulator/minimal_example.py`.
+ 1. Preparing the config dictionary
+ 2. Calling `simulate(config, Top)`, where `config` is the config dict and `Top` is the simulation model.
+
+To run the minimal example.
+```bash
+cd ./examples/simulator
+python ./minimal_example.py
+``` 
+or, replace CPython with PyPy for better performance:
+```bash
+cd ./examples/simulator
+pypy ./minimal_example.py
+```
+
+The simulation program saves experiment results in a workspace specified by config dictionary. By default, it is saved under `./examples/exp_results/some_work_space_name`.
+
+### example on analyzing simulation results
+`dpsched.analysis` contains modules for collecting experiment result from workspace directory and plotting various figures.
+`evaluation/microbenchmark/microbenchmark_figures_single_block.ipynb` gives examples on how to use `dpsched.analysis` module with detailed comments. 
+
+## 2.4 How to reproduce microbenchmark results
+
+Instructions and code for how to use the simulator to reproduce the microbenchmark results in the PrivateKube paper are in [`evaluation/microbenchmark/README.md`](../evaluation/microbenchmark/README.md).
+
+
 
