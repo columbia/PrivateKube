@@ -8,39 +8,6 @@ from kfp.components import func_to_container_op
 from kfp.components import InputPath, OutputPath
 
 
-def run_pipeline():
-    return kfp.components.load_component_from_file(
-        os.path.join(
-            os.path.dirname(__file__),
-            "components_src",
-            "subpipeline",
-            "run_pipeline.yaml",
-        )
-    )
-
-
-def run_subpipeline():
-    return kfp.components.load_component_from_file(
-        os.path.join(
-            os.path.dirname(__file__),
-            "components_src",
-            "subpipeline",
-            "run_subpipeline.yaml",
-        )
-    )
-
-
-def run_subpipeline_serialized():
-    return kfp.components.load_component_from_file(
-        os.path.join(
-            os.path.dirname(__file__),
-            "components_src",
-            "subpipeline",
-            "run_subpipeline_serialized.yaml",
-        )
-    )
-
-
 def download_file_from_uri():
     return kfp.components.load_component_from_file(
         os.path.join(
@@ -82,26 +49,13 @@ def upload_file_to_uri():
     )
 
 
-def release_claim():
+def upload_file_with_name():
     return kfp.components.load_component_from_file(
         os.path.join(
             os.path.dirname(__file__),
             "components_src",
-            "claim",
-            "release",
-            "release.yaml",
-        )
-    )
-
-
-def delete_claim():
-    return kfp.components.load_component_from_file(
-        os.path.join(
-            os.path.dirname(__file__),
-            "components_src",
-            "claim",
-            "delete",
-            "delete.yaml",
+            "gs",
+            "upload_file_with_name.yaml",
         )
     )
 
@@ -173,3 +127,62 @@ def set_dict_key():
             "set_dict_key.yaml",
         )
     )
+
+
+# These components are unreleased
+
+# def release_claim():
+#     return kfp.components.load_component_from_file(
+#         os.path.join(
+#             os.path.dirname(__file__),
+#             "components_src",
+#             "claim",
+#             "release",
+#             "release.yaml",
+#         )
+#     )
+
+
+# def delete_claim():
+#     return kfp.components.load_component_from_file(
+#         os.path.join(
+#             os.path.dirname(__file__),
+#             "components_src",
+#             "claim",
+#             "delete",
+#             "delete.yaml",
+#         )
+#     )
+
+
+# def run_pipeline():
+#     return kfp.components.load_component_from_file(
+#         os.path.join(
+#             os.path.dirname(__file__),
+#             "components_src",
+#             "subpipeline",
+#             "run_pipeline.yaml",
+#         )
+#     )
+
+
+# def run_subpipeline():
+#     return kfp.components.load_component_from_file(
+#         os.path.join(
+#             os.path.dirname(__file__),
+#             "components_src",
+#             "subpipeline",
+#             "run_subpipeline.yaml",
+#         )
+#     )
+
+
+# def run_subpipeline_serialized():
+#     return kfp.components.load_component_from_file(
+#         os.path.join(
+#             os.path.dirname(__file__),
+#             "components_src",
+#             "subpipeline",
+#             "run_subpipeline_serialized.yaml",
+#         )
+#     )

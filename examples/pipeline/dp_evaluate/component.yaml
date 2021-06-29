@@ -1,0 +1,133 @@
+description: ""
+implementation:
+  container:
+    command:
+      - python3
+      - main.py
+      - --n_blocks
+      - inputValue: n_blocks
+      - --max_text_len
+      - inputValue: max_text_len
+      - --vocab_size
+      - inputValue: vocab_size
+      - --task
+      - inputValue: task
+      - --model
+      - inputValue: model
+      - --embedding_dim
+      - inputValue: embedding_dim
+      - --hidden_dim_1
+      - inputValue: hidden_dim_1
+      - --hidden_dim_2
+      - inputValue: hidden_dim_2
+      - --hidden_dim
+      - inputValue: hidden_dim
+      - --dropout
+      - inputValue: dropout
+      - --device
+      - inputValue: device
+      - --dp
+      - inputValue: dp
+      - --user_level
+      - inputValue: user_level
+      - --n_workers
+      - inputValue: n_workers
+      - --epsilon_fraction
+      - inputValue: epsilon_fraction
+      - --delta_fraction
+      - inputValue: delta_fraction
+      - --dataset_monofile
+      - inputPath: dataset_monofile
+      - --block_counts
+      - inputPath: block_counts
+      - --metrics_path
+      - outputPath: metrics_path
+      - --model_path
+      - inputPath: model_path
+    image: privatekube/dp_evaluate:06-28-07-51-14
+inputs:
+  - description: n_blocks
+    name: n_blocks
+    type: Int
+  - description: max_text_len
+    name: max_text_len
+    type: Int
+  - description: vocab_size
+    name: vocab_size
+    type: Int
+  - description: task
+    name: task
+    type: String
+  - description: model
+    name: model
+    type: String
+  - description: embedding_dim
+    name: embedding_dim
+    type: Int
+  - description: hidden_dim_1
+    name: hidden_dim_1
+    type: Int
+  - description: hidden_dim_2
+    name: hidden_dim_2
+    type: Int
+  - description: hidden_dim
+    name: hidden_dim
+    type: Int
+  - description: dropout
+    name: dropout
+    type: Float
+  - description: device
+    name: device
+    type: String
+  - description: learning_rate
+    name: learning_rate
+    type: Float
+  - description: dp
+    name: dp
+    type: Int
+  - description: user_level
+    name: user_level
+    type: Int
+  - description: epsilon
+    name: epsilon
+    type: Float
+  - description: delta
+    name: delta
+    type: Float
+  - description: n_epochs
+    name: n_epochs
+    type: Int
+  - description: batch_size
+    name: batch_size
+    type: Int
+  - description: noise
+    name: noise
+    type: Float
+  - description: timeframe_days
+    name: timeframe_days
+    type: Int
+  - description: learning_rate_scheduler
+    name: learning_rate_scheduler
+    type: Int
+  - description: max_grad_norm
+    name: max_grad_norm
+    type: Float
+  - description: n_workers
+    name: n_workers
+    type: Int
+  - name: epsilon_fraction
+    type: Float
+  - name: delta_fraction
+    type: Float
+  - name: block_counts
+    type: Data
+  - name: dataset_monofile
+    type: Data
+  - description: model_path
+    name: model_path
+    type: Data
+name: DP evaluate
+outputs:
+  - description: metrics_path
+    name: metrics_path
+    type: Data

@@ -50,7 +50,7 @@ outputs:
     }
 implementation:
   container:
-    image: DOCKER_IMAGE_PLACEHOLDER
+    image: privatekube/allocate:06-28-07-52-32
     command:
       [
         python3,

@@ -75,7 +75,7 @@ def save_model(model_path, model):
     if not os.path.exists(model_dir) and model_dir != "":
         os.makedirs(model_dir)
         logging.debug(f"Created directory: {model_dir}.")
-    torch.save(model_path, model.state_dict())
+    torch.save(model.state_dict(), model_path)
 
 
 def save_yaml(yaml_path, dict_results):

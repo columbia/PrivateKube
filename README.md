@@ -6,33 +6,33 @@ PrivateKube is an extension to the popular Kubernetes datacenter orchestrator th
 
 ## Repo structure
 
-This repository contains the artifact release for the OSDI paper.  Currently, we provide:
+This repository contains the artifact release for the OSDI paper:
 - [system](system/): The PrivateKube system, which implements the privacy resource and a new scheduling algorithm for it, called *Dominant Privacy Fairness (DPF)*.
 - [privatekube](privatekube/): A python client for interaction with the PrivateKube system and performing macrobenchmark evaluation.
 - [simulator](simulator/): A simulator for microbenchmarking privacy scheduling algorithms in tightly controlled settings.
 - [examples](examples/): Usage examples for various components, please refer its [README](./examples/README.md) for details.
 - [evaluation](evaluation/): Scripts to reproduce the macrobenchmark and microbenchmark evaluation results from our paper.
 
-We do not provide yet but will do so in the near future:
-- The Kubeflow Pipeline interface (currently tied to our Google Cloud infrastructure) and an example of pipeline.
-
 ## Instruction structure
-- [1. Getting started with PrivateKube](#1-getting-started-with-privatekube)
-  - [1.1 Requirements](#11-requirements)
-  - [1.2. Deploying PrivateKube](#12-deploying-privatekube)
-    - [Download the code](#download-the-code)
-    - [Create a Python environment](#create-a-python-environment)
-    - [Deploy PrivateKube to your cluster](#deploy-privatekube-to-your-cluster)
-  - [1.3. Hello World](#13-hello-world)
-  - [1.4. Example PrivateKube Usage in DP ML Pipeline](#14-example-privatekube-usage-in-dp-ml-pipeline)
-- [2. Getting started with simulator](#2-getting-started-with-simulator)
-  - [2.1 Setup](#21-setup)
-    - [Setup python environment](#setup-python-environment)
-    - [Installation from source](#installation-from-source)
-  - [2.2 Examples](#22-examples)
-    - [The minimal simulation example](#the-minimal-simulation-example)
-    - [How to analyze simulation results](#how-to-analyze-simulation-results)
-  - [2.3 How to reproduce microbenchmark evaluation](#23-how-to-reproduce-microbenchmark-evaluation)
+- [PrivateKube](#privatekube)
+  - [Repo structure](#repo-structure)
+  - [Instruction structure](#instruction-structure)
+  - [1. Getting started with PrivateKube](#1-getting-started-with-privatekube)
+    - [1.1 Requirements](#11-requirements)
+    - [1.2. Deploying PrivateKube](#12-deploying-privatekube)
+      - [Download the code](#download-the-code)
+      - [Create a Python environment](#create-a-python-environment)
+      - [Deploy PrivateKube to your cluster](#deploy-privatekube-to-your-cluster)
+    - [1.3. Hello World](#13-hello-world)
+    - [1.4. Example usage in a DP ML pipeline](#14-example-usage-in-a-dp-ml-pipeline)
+  - [2. Getting started with the simulator](#2-getting-started-with-the-simulator)
+    - [2.1 Setup](#21-setup)
+      - [Setup python environment](#setup-python-environment)
+      - [Installation from source](#installation-from-source)
+    - [2.2 Examples](#22-examples)
+      - [The minimal simulation example](#the-minimal-simulation-example)
+      - [How to analyze simulation results](#how-to-analyze-simulation-results)
+    - [2.3 How to reproduce microbenchmark evaluation](#23-how-to-reproduce-microbenchmark-evaluation)
 
 
 ## 1. Getting started with PrivateKube
@@ -233,12 +233,14 @@ kubectl delete namespace privacy-example
 
 We now have a proper abstraction to manage privacy as a native Kubernetes resource.  The next section will provide an end-to-end example for how to interact with the privacy resource through a real machine learning pipeline.  You can also refer to [evaluation/macrobenchmark](evaluation/macrobenchmark) to reproduce part of our evaluation of this resource and the DPF algorithm we developed for it.
 
-### 1.4. Example Usage in DP ML Pipeline
+### 1.4. Example usage in a DP ML pipeline
 
-To appear.
+The [examples/pipeline](examples/pipeline) directory contains a step-by-step guide to build a DP ML pipeline with PrivateKube.
+
+![](examples/pipeline/kubeflow.png)
 
 
-## 2. Getting started with simulator
+## 2. Getting started with the simulator
 
 This simulator is used for prototyping and microbenchmark evaluation of privacy budget scheduling algorithms. It supports controlled evaluation of DPF against baseline algorithms, including round-robin and first-come-first-serve.
 
@@ -268,15 +270,15 @@ pip install .[plot]
 
 ### 2.2 Examples
 #### The minimal simulation example
-`./examples/simulator/minimal_example.py` gives a quick start. There are two key concepts in the simulation program:
+[examples/simulator/minimal_example.py](examples/simulator/minimal_example.py) gives a quick start. There are two key concepts in the simulation program:
 1. The simulation model: This implements how different components in the systems behave and interact with each other. One can import it via `from dpsched import Top`
-2. The configuration dictionary: a dictionary that specifies many aspects of simulation behavior. for configuration details, please refer to the comments in minimal_example.py
+2. The configuration dictionary: a dictionary that specifies many aspects of the simulation behavior. for configuration details, please refer to the comments in [minimal_example.py](examples/simulator/minimal_example.py).
 
- Basically, there are two steps in `./examples/simulator/minimal_example.py`.
+ Basically, there are two steps in [minimal_example.py](examples/simulator/minimal_example.py).
  1. Preparing the config dictionary
  2. Calling `simulate(config, Top)`, where `config` is the config dict and `Top` is the simulation model.
 
-To run the minimal example.
+To run the minimal example:
 ```bash
 cd ./examples/simulator
 python ./minimal_example.py
@@ -287,11 +289,11 @@ cd ./examples/simulator
 pypy ./minimal_example.py
 ```
 
-The simulation program saves experiment results in a workspace specified by config dictionary. By default, it is saved under `./examples/exp_results/some_work_space_name`.
+The simulation program saves experiment results in a workspace specified by a config dictionary. By default, it is saved under `./examples/exp_results/some_work_space_name`.
 
 #### How to analyze simulation results
 `dpsched.analysis` contains modules for collecting experiment result from workspace directory and plotting various figures.
-`evaluation/microbenchmark/microbenchmark_figures_single_block.ipynb` gives examples on how to use `dpsched.analysis` module with detailed comments. 
+[evaluation/microbenchmark/microbenchmark_figures_single_block.ipynb](evaluation/microbenchmark/microbenchmark_figures_single_block.ipynb) gives examples on how to use the `dpsched.analysis` module with detailed comments. 
 
 ### 2.3 How to reproduce microbenchmark evaluation
 

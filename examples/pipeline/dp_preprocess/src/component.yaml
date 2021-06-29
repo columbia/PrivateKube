@@ -1,0 +1,36 @@
+name: DP preprocesss
+description: Merges the h5 files and runs some statistics
+inputs:
+  - { name: input_data, type: Data }
+  - { name: epsilon, type: Float }
+  - { name: delta, type: Float }
+  - { name: epsilon_fraction, type: Float }
+  - { name: delta_fraction, type: Float }
+outputs:
+  - { name: dataset_monofile, type: Data, description: "Artifact: h5 file" }
+  - { name: statistics, type: Data, description: "Artifact: JSON" }
+  - { name: block_counts, type: Data, description: "Artifact: JSON." }
+implementation:
+  container:
+    image: DOCKER_IMAGE_PLACEHOLDER
+    command:
+      [
+        python3,
+        main.py,
+        --input_data,
+        { inputPath: input_data },
+        --epsilon,
+        { inputValue: epsilon },
+        --delta,
+        { inputValue: delta },
+        --epsilon_fraction,
+        { inputValue: epsilon_fraction },
+        --delta_fraction,
+        { inputValue: delta_fraction },
+        --dataset_monofile,
+        { outputPath: dataset_monofile },
+        --statistics,
+        { outputPath: statistics },
+        --block_counts,
+        { outputPath: block_counts },
+      ]

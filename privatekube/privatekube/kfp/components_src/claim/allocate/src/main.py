@@ -64,11 +64,6 @@ def create_timespan_allocation_request(
 
 
 def get_datasource(api, block_reference):
-    """
-    Ex:
-    input: privacy-example/block-2015-01-01
-    output:  gs://private-systems-1887eadb-public/processed/days/2015-01-01.csv
-    """
     namespace, name = block_reference.split("/")
     get_block = api.get_namespaced_custom_object(
         group="columbia.github.com",
@@ -82,15 +77,8 @@ def get_datasource(api, block_reference):
 
 def main(args):
 
-    with open(Path(__file__).parent.joinpath("cluster_secrets.yaml"), "r") as f:
-        config = yaml.safe_load(f)
-
-    # Prepare Kubernetes
-    # os.system(
-    #     "gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS"
-    # )
     os.system(
-        f"gcloud container clusters get-credentials {config['cluster_name']} --zone={config['zone']}"
+        f"gcloud container clusters get-credentials {args.cluster_name} --zone={args.zone}"
     )
     kconfig.load_kube_config()
     api = client.CustomObjectsApi()
@@ -209,6 +197,8 @@ if __name__ == "__main__":
     parser.add_argument("--delta", type=float, required=True)
     parser.add_argument("--n_blocks", type=int, required=True)
     parser.add_argument("--timeout", type=int, required=True)
+    parser.add_argument("--cluster_name", type=str, required=True)
+    parser.add_argument("--zone", type=str, required=True)
 
     # Output Paths (provided by Kubeflow to write artifacts)
     parser.add_argument("--output_data", type=str, required=True)
