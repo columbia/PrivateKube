@@ -139,4 +139,4 @@ To start the scheduler with new parameters (e.g., a lower value of N so you can 
 
 ### Caching
 
-Kubeflow offers a cache thanks to ML Metadata. It is extremely useful to speed up similar components and to debug pipelines. However, this cache can interfere with PrivateKube's privacy claims: if the component and the inputs are identical, Kubeflow can reuse the same private data blocks without running the allocation component again, thus overspending privacy budget. To avoid this, we [deactivate caching](https://www.kubeflow.org/docs/components/pipelines/caching/#managing-caching-staleness) for privacy claims.
+Kubeflow offers a cache thanks to ML Metadata. It is extremely useful to speed up similar components and to debug pipelines. However, this cache can interfere with PrivateKube's privacy claims: if the component and the inputs are identical, Kubeflow can reuse the same private data blocks without running the allocation component again, thus overspending privacy budget. To avoid this, we currently [deactivate caching](https://www.kubeflow.org/docs/components/pipelines/caching/#managing-caching-staleness) for privacy claims.
