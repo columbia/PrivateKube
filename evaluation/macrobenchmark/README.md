@@ -1,13 +1,20 @@
 
 # Macrobenchmark
 
+
+## Requirements
+
 The commands in this section have to be run from the `macrobenchmark` directory. You can jump there with:
 
 ```bash
 cd evaluation/macrobenchmark
 ```
 
+You should have the `privatekube` Python package installed, as described in the [main README](https://github.com/columbia/PrivateKube).
+
 Please note that the steps below can take several days to run, depending on your hardware. If you want to examine the experimental data without running the preprocessing or the training yourself, you can download some artifacts from this [public bucket](https://storage.googleapis.com/privatekube-public-artifacts). 
+
+Training will be faster with a Nvidia GPU, but you can also use your CPU by specifying `--device=cpu` in the script arguments.
 
 ## Download and preprocess the dataset
 

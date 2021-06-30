@@ -1,14 +1,14 @@
 
 # PrivateKube
 
-PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI'21 paper, titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo) (PDF locally available [here](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf)).
+PrivateKube is an extension to the popular Kubernetes datacenter orchestrator that adds privacy as a new type of resource to be managed alongside other traditional compute resources, such as CPU, GPU, and memory.  A description of the project can be found on our [webpage](https://systems.cs.columbia.edu/PrivateKube/) and in our OSDI'21 paper, titled [Privacy Budget Scheduling](https://www.usenix.org/conference/osdi21/presentation/luo) (PDF locally available [here](https://columbia.github.io/PrivateKube/papers/osdi2021privatekube.pdf) and extended version available on [arXiv](https://arxiv.org/abs/2106.15335).
 
 
 ## Repo structure
 
 This repository contains the artifact release for the OSDI paper:
 - [system](system/): The PrivateKube system, which implements the privacy resource and a new scheduling algorithm for it, called *Dominant Privacy Fairness (DPF)*.
-- [privatekube](privatekube/): A python client for interaction with the PrivateKube system and performing macrobenchmark evaluation.
+- [privatekube](privatekube/): A Python client for interaction with the PrivateKube system and performing macrobenchmark evaluation.
 - [simulator](simulator/): A simulator for microbenchmarking privacy scheduling algorithms in tightly controlled settings.
 - [examples](examples/): Usage examples for various components, please refer its [README](./examples/README.md) for details.
 - [evaluation](evaluation/): Scripts to reproduce the macrobenchmark and microbenchmark evaluation results from our paper.
@@ -27,7 +27,7 @@ This repository contains the artifact release for the OSDI paper:
     - [1.4. Example usage in a DP ML pipeline](#14-example-usage-in-a-dp-ml-pipeline)
   - [2. Getting started with the simulator](#2-getting-started-with-the-simulator)
     - [2.1 Setup](#21-setup)
-      - [Setup python environment](#setup-python-environment)
+      - [Setup a Python environment](#setup-a-python-environment)
       - [Installation from source](#installation-from-source)
     - [2.2 Examples](#22-examples)
       - [The minimal simulation example](#the-minimal-simulation-example)
@@ -63,6 +63,7 @@ mkdir ~/.kube
 
 sudo chown -f -R $USER ~/.kube
 ```
+(You can learn more about how to use Microk8s without sudo [here](https://github.com/ubuntu/microk8s/blob/feature/dev-docs/docs/access-without-sudo.md))
 
 You can now start and stop your cluster with:
 ```bash
@@ -247,8 +248,8 @@ This simulator is used for prototyping and microbenchmark evaluation of privacy 
 
 ### 2.1 Setup
 
-#### Setup python environment
-Install conda, create and activate an isolated python environment "ae". 
+#### Setup a Python environment
+Install Conda, create and activate an isolated Python environment "ae". 
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
 bash ~/miniconda.sh -b -p $HOME/miniconda
