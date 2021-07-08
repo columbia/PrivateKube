@@ -10,6 +10,6 @@ The [PrivateKube repository](https://github.com/columbia/PrivateKube) contains t
 
 ## Related Publications
 
-* Tao Luo, Mingen Pan, Pierre Tholoniat, Asaf Cidon, Roxana Geambasu, and Mathias Lecuyer. "Privacy Budget Scheduling and Orchestration." In *Proceedings of the USENIX Symposium on Operating Systems Design and Implementation (OSDI)*, July 2021. [proceedings version](papers/osdi2021privatekube.pdf), [extended version](https://arxiv.org/abs/2106.15335)
+* Tao Luo, Mingen Pan, Pierre Tholoniat, Asaf Cidon, Roxana Geambasu, and Mathias Lecuyer. "Privacy Budget Scheduling and Orchestration." In *Proceedings of the USENIX Symposium on Operating Systems Design and Implementation (OSDI)*, July 2021. [[proceedings version]](papers/osdi2021privatekube.pdf), [[extended version]](https://arxiv.org/abs/2106.15335)
 
-* Mathias Lecuyer, Riley Spahn, Kiran Vodrahalli, Roxana Geambasu, and Daniel Hsu. "Privacy Accounting and Quality Control in the Sage Differentially Private Machine Learning Platform." In *Proceedings of the ACM Symposium on Operating Systems Principles (SOSP)*, October 2019. [proceedings version](papers/sosp2019sage.pdf)
+* Mathias Lecuyer, Riley Spahn, Kiran Vodrahalli, Roxana Geambasu, and Daniel Hsu. "Privacy Accounting and Quality Control in the Sage Differentially Private Machine Learning Platform." In *Proceedings of the ACM Symposium on Operating Systems Principles (SOSP)*, October 2019. [PDF](papers/sosp2019sage.pdf)
