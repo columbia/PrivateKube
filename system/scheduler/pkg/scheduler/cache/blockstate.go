@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"math"
 	"sync"
 
 	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
@@ -11,7 +10,7 @@ import (
 
 type DemandState struct {
 	Availability bool
-	Share        float64
+	Cost         float64
 	IsValid      bool
 }
 
@@ -46,64 +45,28 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	initialBudget := blockState.block.Spec.InitialBudget
 	availableBudget := blockState.block.Status.AvailableBudget
 
-	share := getDominantShare(budget, initialBudget)
+	blockCost := getPerBlockCost(budget, initialBudget)
 
 	return &DemandState{
 		Availability: availableBudget.HasEnough(budget),
-		Share:        share,
+		Cost:         blockCost,
 		IsValid:      true,
 	}
 }
 
-func getDominantShare(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBudget) float64 {
-	var share float64
-
-	if budget.IsEpsDelType() && base.IsEpsDelType() {
-		if base.EpsDel.Epsilon > columbiav1.EmptyThreshold {
-			share = math.Max(share, budget.EpsDel.Epsilon/base.EpsDel.Epsilon)
-		}
-
-		if base.EpsDel.Delta > columbiav1.EmptyThreshold {
-			share = math.Max(share, budget.EpsDel.Delta/base.EpsDel.Delta)
-		}
-
-		return share
-	}
-
+func getPerBlockCost(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBudget) float64 {
 	budget.ToRenyi()
 	base.ToRenyi()
-
-	return getRenyiDominantShare(budget.Renyi, base.Renyi)
+	return getPerBlockCostRenyi(budget.Renyi, base.Renyi)
 }
 
-func getRenyiDominantShare(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
-	var share float64
+func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
+	var blockCost float64
 	b, c := columbiav1.ReduceToSameSupport(budget, base)
 	for i := range b {
-		share = math.Max(share, b[i].Epsilon/c[i].Epsilon)
+		blockCost += b[i].Epsilon / c[i].Epsilon
 	}
-	return share
-}
-
-func oldgetRenyiDominantShare(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
-	var share float64
-
-	p := 0
-	for q := range base {
-		for p < len(budget) && budget[p].Alpha < base[q].Alpha {
-			p++
-		}
-
-		if budget[q].Epsilon <= 0 {
-			continue
-		}
-
-		if p < len(budget) && budget[p].Alpha == base[q].Alpha {
-			share = math.Max(share, budget[p].Epsilon/base[q].Epsilon)
-		}
-	}
-
-	return share
+	return blockCost
 }
 
 // UpdateDemandMap updates the demand for each claim on this block

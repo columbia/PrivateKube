@@ -19,18 +19,10 @@ type ClaimState struct {
 	id      string
 }
 
-// ShareInfo is a helper type bound to a claim. It records information on whether a claim is ready to
+// CostInfo is a helper type bound to a claim. It records information on whether a claim is ready to
 // be converted reserved budget
-type ShareInfo struct {
-	DominantShare     float64
-	AvailableBlocks   []string
-	IsReadyToAllocate bool
-}
-
-// EfficiencyInfo is a helper type bound to a claim. It records information on whether a claim is ready to
-// be converted reserved budget
-type EfficiencyInfo struct {
-	efficiency        float64
+type CostInfo struct {
+	Cost              float64
 	AvailableBlocks   []string
 	IsReadyToAllocate bool
 }
@@ -46,26 +38,76 @@ func NewClaimState(claim *columbiav1.PrivacyBudgetClaim) *ClaimState {
 	return claimState
 }
 
-type blockSharePair struct {
-	share   float64
+type blockCostPair struct {
+	cost    float64
 	blockId string
 }
 
-type blockShareSlice []blockSharePair
+type blockCostSlice []blockCostPair
 
-func (slice blockShareSlice) Len() int {
+func (slice blockCostSlice) Len() int {
 	return len(slice)
 }
 
-func (slice blockShareSlice) Less(i, j int) bool {
-	return slice[i].share < slice[j].share
+func (slice blockCostSlice) Less(i, j int) bool {
+	return slice[i].cost < slice[j].cost
 }
 
-func (slice blockShareSlice) Swap(i, j int) {
+func (slice blockCostSlice) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
+//func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
+//	claimState.Lock()
+//	defer claimState.Unlock()
+//
+//	if !claimState.hasPendingRequest() {
+//		return
+//	}
+//
+//	// maxN is the max number of blocks
+//	// minN is the min number of blocks
+//	pendingRequest := claimState.claim.Spec.Requests[claimState.nextIndex].AllocateRequest
+//	maxN := pendingRequest.MaxNumberOfBlocks
+//
+//	if maxN == 0 {
+//		maxN = len(claimState.Demands)
+//	}
+//
+//	pairs := make(blockShareSlice, 0, len(claimState.Demands))
+//	for blockId, demand := range claimState.Demands {
+//		if !demand.Availability {
+//			continue
+//		}
+//
+//		pairs = append(pairs, blockSharePair{demand.Share, blockId})
+//	}
+//
+//	// the reason of len(pairs) < maxN is that the scheduler will try to allocate all the data blocks up to maxN.
+//	// If the current condition does not have maxN data blocks available to allocated to a claim, then the scheduler will
+//	// not schedule this claim.
+//	if len(pairs) < maxN {
+//		result.IsReadyToAllocate = false
+//		return
+//	}
+//	result.IsReadyToAllocate = true
+//
+//	// else case will be maxN == len(pairs). In this case, no need to select the first maxN.
+//	if maxN < len(pairs) {
+//		_ = quickselect.QuickSelect(pairs, maxN)
+//	}
+//
+//	result.DominantShare = 0
+//	result.AvailableBlocks = make([]string, 0, maxN)
+//	for _, pair := range pairs[:maxN] {
+//		result.DominantShare = math.Max(result.DominantShare, pair.share)
+//		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
+//	}
+//
+//	return
+//}
+
+func (claimState *ClaimState) UpdateTotalCost() (result CostInfo) {
 	claimState.Lock()
 	defer claimState.Unlock()
 
@@ -82,13 +124,12 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 		maxN = len(claimState.Demands)
 	}
 
-	pairs := make(blockShareSlice, 0, len(claimState.Demands))
+	pairs := make(blockCostSlice, 0, len(claimState.Demands))
 	for blockId, demand := range claimState.Demands {
 		if !demand.Availability {
 			continue
 		}
-
-		pairs = append(pairs, blockSharePair{demand.Share, blockId})
+		pairs = append(pairs, blockCostPair{demand.cost, blockId})
 	}
 
 	// the reason of len(pairs) < maxN is that the scheduler will try to allocate all the data blocks up to maxN.
@@ -105,10 +146,10 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 		_ = quickselect.QuickSelect(pairs, maxN)
 	}
 
-	result.DominantShare = 0
+	result.Cost = 0
 	result.AvailableBlocks = make([]string, 0, maxN)
 	for _, pair := range pairs[:maxN] {
-		result.DominantShare = math.Max(result.DominantShare, pair.share)
+		result.Cost += pair.cost
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
 
