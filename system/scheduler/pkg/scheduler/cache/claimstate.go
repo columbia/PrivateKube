@@ -78,7 +78,7 @@ func (claimState *ClaimState) UpdateTotalCost() (result CostInfo) {
 		if !demand.Availability {
 			continue
 		}
-		pairs = append(pairs, blockCostPair{demand.cost, blockId})
+		pairs = append(pairs, blockCostPair{demand.Cost, blockId})
 	}
 
 	// the reason of len(pairs) < maxN is that the scheduler will try to allocate all the data blocks up to maxN.

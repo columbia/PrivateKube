@@ -66,7 +66,7 @@ func main() {
 	coreRecorder := coreBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "privacyscheduler"})
 
 	var privacyScheduler *scheduler.Scheduler
-	var option scheduler.DpfSchedulerOption
+	var option scheduler.SchedulerOption
 	var blockLifecycleOption datablocklifecycle.BlockLifecycleOption
 
 	option = scheduler.DefaultTSchemeOption()

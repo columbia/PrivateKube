@@ -3,8 +3,8 @@ package algorithm
 import (
 	"strings"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 )
 
 func validateCondition(condition columbiav1.Condition, dimension columbiav1.Dimension) bool {

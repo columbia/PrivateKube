@@ -96,6 +96,10 @@ type SchedulerOption struct {
 
 	// default releasing period for DPN-T policy. Unit is ms.
 	DefaultReleasingDuration int64
+
+	// Optional: configuration for the streaming counter
+	// E.g. budget for the Laplace mechanism used by the counter (will be converted to RDP if necessary)
+	StreamingCounterOptions *schedulercache.StreamingCounterOptions
 }
 
 func DefaultTSchemeOption() SchedulerOption {
@@ -103,6 +107,15 @@ func DefaultTSchemeOption() SchedulerOption {
 		DefaultTimeout:           20000,
 		DefaultReleasingPeriod:   10000,
 		DefaultReleasingDuration: 30000,
+	}
+}
+
+func NewStreamingCounterOptions(LaplaceNoise float64, MaxNumberOfTicks int) *schedulercache.StreamingCounterOptions {
+
+	// func NewStreamingCounterOptions(b columbiav1.PrivacyBudget, T int) schedulercache.StreamingCounterOptions {
+	return &schedulercache.StreamingCounterOptions{
+		LaplaceNoise:     LaplaceNoise,
+		MaxNumberOfTicks: MaxNumberOfTicks,
 	}
 }
 

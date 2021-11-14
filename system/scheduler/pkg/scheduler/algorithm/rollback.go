@@ -3,16 +3,16 @@ package algorithm
 import (
 	"fmt"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 	"k8s.io/klog"
 )
 
-func (dpf *DpfBatch) BatchRollback(blockStates []*cache.BlockState, requestHandler framework.RequestHandler, errMessage string) bool {
+func (batch *Batch) BatchRollback(blockStates []*cache.BlockState, requestHandler framework.RequestHandler, errMessage string) bool {
 	// add a failure response to the privacy budget claim
-	err := dpf.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
+	err := batch.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
 		if len(claim.Status.Responses) > requestHandler.RequestIndex {
 
 			// If status is pending, then convert it to FAILURE
@@ -21,7 +21,7 @@ func (dpf *DpfBatch) BatchRollback(blockStates []*cache.BlockState, requestHandl
 				response.State = columbiav1.Failure
 				response.Error = errMessage
 				response.AllocateResponse.Budgets = map[string]columbiav1.BudgetAccount{}
-				response.AllocateResponse.FinishTime = dpf.timer.Now()
+				response.AllocateResponse.FinishTime = batch.timer.Now()
 			}
 
 		} else {
@@ -31,7 +31,7 @@ func (dpf *DpfBatch) BatchRollback(blockStates []*cache.BlockState, requestHandl
 				Error:      errMessage,
 				AllocateResponse: &columbiav1.AllocateResponse{
 					Budgets:    map[string]columbiav1.BudgetAccount{},
-					FinishTime: dpf.timer.Now(),
+					FinishTime: batch.timer.Now(),
 				},
 			})
 		}
@@ -50,7 +50,7 @@ func (dpf *DpfBatch) BatchRollback(blockStates []*cache.BlockState, requestHandl
 
 	done := make(chan bool)
 	rollbackWrapper := func(blockState *cache.BlockState) {
-		err := dpf.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
+		err := batch.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
 			return rollbackLockedBudget(block, requestViewer)
 		}, blockState)
 
@@ -79,17 +79,17 @@ func (dpf *DpfBatch) BatchRollback(blockStates []*cache.BlockState, requestHandl
 	return true
 }
 
-func (dpf *DpfBatch) BatchRollbackByKey(blockIds []string, requestHandler framework.RequestHandler, errMessage string) bool {
+func (batch *Batch) BatchRollbackByKey(blockIds []string, requestHandler framework.RequestHandler, errMessage string) bool {
 	blockStates := make([]*cache.BlockState, 0, len(blockIds))
 
 	for _, blockId := range blockIds {
-		blockState := dpf.cache.GetBlock(blockId)
+		blockState := batch.cache.GetBlock(blockId)
 		if blockState != nil {
 			blockStates = append(blockStates, blockState)
 		}
 	}
 
-	return dpf.BatchRollback(blockStates, requestHandler, errMessage)
+	return batch.BatchRollback(blockStates, requestHandler, errMessage)
 }
 
 func rollbackLockedBudget(block *columbiav1.PrivateDataBlock, requestViewer framework.RequestViewer) error {

@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"math"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 	"k8s.io/klog"
 )
 
@@ -119,14 +119,14 @@ func (counter *StreamingCounter) GetLaplaceBudgetAs(target *columbiav1.PrivacyBu
 
 	var budget columbiav1.PrivacyBudget
 	if target.IsEpsDelType() {
-		budget = columbiav1.NewPrivacyBudget(float(counter.n_bits)/counter.LaplaceNoise, 0, false)
+		budget = columbiav1.NewPrivacyBudget(float64(counter.n_bits)/counter.LaplaceNoise, 0, false)
 	} else {
 		// See extended paper for the RDP curve, which corresponds to the sum of log T curves of the Laplace mechanism
 		b := make(columbiav1.RenyiBudget, 0, len(target.Renyi))
 		target.Copy()
 		for i := range target.Renyi {
 			alpha := target.Renyi[i].Alpha
-			epsilon := float(counter.n_bits) * laplaceRDP(counter.LaplaceNoise, alpha)
+			epsilon := float64(counter.n_bits) * laplaceRDP(counter.LaplaceNoise, alpha)
 			if !math.IsInf(epsilon, 0) && !math.IsNaN(epsilon) {
 				b = append(b, columbiav1.RenyiBudgetBlock{
 					Alpha:   alpha,
