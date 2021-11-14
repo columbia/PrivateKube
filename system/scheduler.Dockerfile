@@ -20,7 +20,7 @@ WORKDIR $DIRPATH/privacycontrollers
 RUN go mod download
 RUN go mod tidy
 
-WORKDIR $DIRPATH/dpfscheduler
+WORKDIR $DIRPATH/scheduler
 RUN go mod download
 RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build  -o ../scheduler -mod=mod
