@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dpf-scheduler
+  namespace: privatekube
+  labels:
+    app: dpf-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dpf-scheduler
+  template:
+    metadata:
+      labels:
+        app: dpf-scheduler
+    spec:
+      containers:
+        - name: dpf-scheduler
+          image: privatekube/dpfscheduler:latest
+          args:
+            - --kubeconfig=
+            - --mode=0
+            - --n=5
+      serviceAccountName: dp-components
