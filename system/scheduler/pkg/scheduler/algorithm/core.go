@@ -1,9 +1,9 @@
 package algorithm
 
 import (
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 	"k8s.io/klog"
 )
 

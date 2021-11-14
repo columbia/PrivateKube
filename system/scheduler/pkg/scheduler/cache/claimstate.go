@@ -27,6 +27,14 @@ type ShareInfo struct {
 	IsReadyToAllocate bool
 }
 
+// EfficiencyInfo is a helper type bound to a claim. It records information on whether a claim is ready to
+// be converted reserved budget
+type EfficiencyInfo struct {
+	efficiency        float64
+	AvailableBlocks   []string
+	IsReadyToAllocate bool
+}
+
 func NewClaimState(claim *columbiav1.PrivacyBudgetClaim) *ClaimState {
 	claimState := &ClaimState{
 		claim:     claim,

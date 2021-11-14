@@ -1,4 +1,4 @@
-module columbia.github.com/privatekube/dpfscheduler
+module columbia.github.com/privatekube/scheduler
 
 go 1.14
 

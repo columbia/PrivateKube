@@ -3,34 +3,34 @@ package algorithm
 import (
 	"fmt"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/updater"
 	"k8s.io/klog"
 )
 
-type DpfTSchemeBatch struct {
-	DpfBatch
+type TSchemeBatch struct {
+	Batch
 }
 
-func NewDpfTSchemeBatch(
+func NewTSchemeBatch(
 	updater updater.ResourceUpdater,
 	cache_ cache.Cache,
 	p2Chan chan<- string,
-) *DpfTSchemeBatch {
+) *TSchemeBatch {
 
-	return &DpfTSchemeBatch{
-		DpfBatch: *NewDpfBatch(updater, cache_, p2Chan),
+	return &TSchemeBatch{
+		Batch: *NewBatch(updater, cache_, p2Chan),
 	}
 }
 
-func (dpf *DpfTSchemeBatch) BatchAllocate(requestHandler framework.RequestHandler) bool {
+func (batch *TSchemeBatch) BatchAllocate(requestHandler framework.RequestHandler) bool {
 	requestViewer := requestHandler.Viewer()
 	allocateRequest := requestViewer.View().AllocateRequest
 
-	blockStates := dpf.getAvailableBlocks(requestViewer)
+	blockStates := batch.getAvailableBlocks(requestViewer)
 	klog.Infof("Available data blocks for request %s are: %v", requestHandler.GetId(), cache.GetIdOfBlockStates(blockStates))
 
 	if len(blockStates) < allocateRequest.MinNumberOfBlocks {
@@ -38,26 +38,26 @@ func (dpf *DpfTSchemeBatch) BatchAllocate(requestHandler framework.RequestHandle
 		klog.Warning(err)
 		// roll back the allocation because there is no enough data blocks to allocate
 
-		return dpf.BatchRollback(blockStates, requestHandler, err.Error())
+		return batch.BatchRollback(blockStates, requestHandler, err.Error())
 	}
 
-	return dpf.batchAllocate(requestHandler, blockStates)
+	return batch.batchAllocate(requestHandler, blockStates)
 }
 
-func (dpf *DpfTSchemeBatch) batchAllocate(
+func (batch *TSchemeBatch) batchAllocate(
 	requestHandler framework.RequestHandler,
 	blockStates []*cache.BlockState) bool {
 
-	if !dpf.BatchAllocateP1(requestHandler, blockStates) {
+	if !batch.BatchAllocateP1(requestHandler, blockStates) {
 		// No need to reschedule, because the only reason of failure is claim does not exist
 		return true
 	}
 
-	dpf.AllocateAvailableBudgets(blockStates)
+	batch.AllocateAvailableBudgets(blockStates)
 	return true
 }
 
-func (dpf *DpfTSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHandler, blockStates []*cache.BlockState) bool {
+func (batch *TSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHandler, blockStates []*cache.BlockState) bool {
 	requestViewer := requestHandler.Viewer()
 	if requestViewer.Claim == nil {
 		return false
@@ -76,7 +76,7 @@ func (dpf *DpfTSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHand
 			return fmt.Errorf("data block is not ready")
 		}
 
-		allocatedBudget, err = dpf.core.AllocateP1(requestViewer, block, columbiav1.PrivacyBudget{}, ToReserve)
+		allocatedBudget, err = batch.core.AllocateP1(requestViewer, block, columbiav1.PrivacyBudget{}, ToReserve)
 		return err
 	}
 
@@ -85,7 +85,7 @@ func (dpf *DpfTSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHand
 	successBlockCount := 0
 
 	for _, blockState := range blockStates {
-		if err := dpf.updater.ApplyOperationToDataBlock(allocateStrategy, blockState); err == nil {
+		if err := batch.updater.ApplyOperationToDataBlock(allocateStrategy, blockState); err == nil {
 			klog.Infof("succeeded to reserve budget from data block [%s] to request [%s]",
 				blockState.GetId(), requestHandler.GetId())
 
@@ -99,7 +99,7 @@ func (dpf *DpfTSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHand
 			if minNumOfBlocks == columbiav1.StrictAllOrNothing {
 				// try to rollback all the qualified data blocks in case some of them were allocated by last
 				// scheduling terminated accidentally
-				return dpf.BatchRollback(blockStates, requestHandler, errors.AllOrNothingError(err).Error())
+				return batch.BatchRollback(blockStates, requestHandler, errors.AllOrNothingError(err).Error())
 			}
 		}
 	}
@@ -109,9 +109,9 @@ func (dpf *DpfTSchemeBatch) BatchAllocateP1(requestHandler framework.RequestHand
 		klog.Errorf("failed to allocate enough data blocks to request [%s]", requestHandler.GetId())
 		// try to rollback all the qualified data blocks in case some of them were allocated by last
 		// scheduling terminated accidentally
-		return dpf.BatchRollback(blockStates, requestHandler, err.Error())
+		return batch.BatchRollback(blockStates, requestHandler, err.Error())
 	}
 
-	dpf.batchCompleteReserving(blockStates, requestHandler, allocatedBudgets)
+	batch.batchCompleteReserving(blockStates, requestHandler, allocatedBudgets)
 	return true
 }

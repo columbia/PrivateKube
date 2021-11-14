@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/algorithm"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/flowreleasing"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/queue"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
 	privacyclientset "columbia.github.com/privatekube/privacyresource/pkg/generated/clientset/versioned"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/algorithm"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/flowreleasing"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/queue"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/updater"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 
-	schedulercache "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	informer "columbia.github.com/privatekube/privacyresource/pkg/generated/informers/externalversions/columbia.github.com/v1"
+	schedulercache "columbia.github.com/privatekube/scheduler/pkg/scheduler/cache"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 )
@@ -30,13 +30,9 @@ const (
 	CommitRequest   = "commit"
 	ReleaseRequest  = "release"
 	AbortRequest    = "abort"
-
-	// mode
-	NScheme = 0
-	TScheme = 1
 )
 
-type DpfScheduler struct {
+type Scheduler struct {
 	// It is expected that changes made via PrivateDataBlockCache will be observed
 	// by NodeLister and Algorithm.
 	cache schedulercache.Cache
@@ -82,22 +78,17 @@ type DpfScheduler struct {
 	// channels
 	allocChan chan string
 
-	// N or T scheme
-	mode int
-
 	// default releasing period for DPN-T policy. Unit is ms.
 	// How frequent should the scheduler release budget
 	defaultReleasingPeriod int64
 }
 
-type DpfSchedulerOption struct {
-	// Scheduling Policy
-	Mode int
+type SchedulerOption struct {
 
 	// default timeout for pending requests. Unit is ms.
 	DefaultTimeout int64
 
-	// N for DPF-N Policy
+	// N for unlocking amount
 	N int
 
 	// default releasing period for DPN-T policy. Unit is ms.
@@ -105,40 +96,18 @@ type DpfSchedulerOption struct {
 
 	// default releasing period for DPN-T policy. Unit is ms.
 	DefaultReleasingDuration int64
-
-	// Optional: configuration for the streaming counter
-	// E.g. budget for the Laplace mechanism used by the counter (will be converted to RDP if necessary)
-	StreamingCounterOptions *schedulercache.StreamingCounterOptions
 }
 
-func DefaultNSchemeOption() DpfSchedulerOption {
-	return DpfSchedulerOption{
-		Mode:           NScheme,
-		N:              100,
-		DefaultTimeout: 20000,
-	}
-}
-
-func DefaultTSchemeOption() DpfSchedulerOption {
-	return DpfSchedulerOption{
-		Mode:                     TScheme,
+func DefaultTSchemeOption() SchedulerOption {
+	return SchedulerOption{
 		DefaultTimeout:           20000,
 		DefaultReleasingPeriod:   10000,
 		DefaultReleasingDuration: 30000,
 	}
 }
 
-func NewStreamingCounterOptions(LaplaceNoise float64, MaxNumberOfTicks int) *schedulercache.StreamingCounterOptions {
-
-	// func NewStreamingCounterOptions(b columbiav1.PrivacyBudget, T int) schedulercache.StreamingCounterOptions {
-	return &schedulercache.StreamingCounterOptions{
-		LaplaceNoise:     LaplaceNoise,
-		MaxNumberOfTicks: MaxNumberOfTicks,
-	}
-}
-
-func (option DpfSchedulerOption) String() string {
-	return fmt.Sprintf("Mode: %d (0 for N, 1 for T)\nTimeout %d\nN %d\nPeriod %d\nTotal duration %d", option.Mode, option.DefaultTimeout, option.N, option.DefaultReleasingPeriod, option.DefaultReleasingDuration)
+func (option SchedulerOption) String() string {
+	return fmt.Sprintf("Timeout %d\nN %d\nPeriod %d\nTotal duration %d", option.DefaultTimeout, option.N, option.DefaultReleasingPeriod, option.DefaultReleasingDuration)
 }
 
 func New(privacyResourceClient privacyclientset.Interface,
@@ -146,11 +115,11 @@ func New(privacyResourceClient privacyclientset.Interface,
 	privacyBudgetClaimInformer informer.PrivacyBudgetClaimInformer,
 	recorder record.EventRecorder,
 	stopCh <-chan struct{},
-	option DpfSchedulerOption) (*DpfScheduler, error) {
+	option SchedulerOption) (*Scheduler, error) {
 	// this schedulerCache will be used by the scheduler and its algorithm engine
 	schedulerCache := schedulercache.NewStateCache(option.StreamingCounterOptions)
 
-	scheduler := new(DpfScheduler)
+	scheduler := new(Scheduler)
 	scheduler.privateResourceClient = privacyResourceClient
 	scheduler.cache = schedulerCache
 	scheduler.timer = timing.MakeDefaultTimer()
@@ -159,18 +128,12 @@ func New(privacyResourceClient privacyclientset.Interface,
 
 	scheduler.allocChan = make(chan string, 16)
 
-	if option.Mode == TScheme {
-		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan)
-		releaseOption := flowreleasing.ReleaseOption{
-			DefaultDuration: option.DefaultReleasingDuration,
-		}
-		scheduler.flowController = flowreleasing.MakeController(schedulerCache, scheduler.updater, scheduler.timer, releaseOption)
-		scheduler.mode = TScheme
-		scheduler.defaultReleasingPeriod = option.DefaultReleasingPeriod
-	} else {
-		scheduler.batch = algorithm.NewDpfNSchemeBatch(option.N, *scheduler.updater, schedulerCache, scheduler.allocChan)
-		scheduler.mode = NScheme
+	scheduler.batch = algorithm.NewTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan)
+	releaseOption := flowreleasing.ReleaseOption{
+		DefaultDuration: option.DefaultReleasingDuration,
 	}
+	scheduler.flowController = flowreleasing.MakeController(schedulerCache, scheduler.updater, scheduler.timer, releaseOption)
+	scheduler.defaultReleasingPeriod = option.DefaultReleasingPeriod
 
 	scheduler.informersHaveSynced = func() bool {
 		return privateDataBlockInformer.Informer().HasSynced() && privacyBudgetClaimInformer.Informer().HasSynced()
@@ -190,28 +153,26 @@ func New(privacyResourceClient privacyclientset.Interface,
 }
 
 // Run begins watching and scheduling. It waits for cache to be synced, then starts scheduling and blocked until the context is done.
-func (dpfScheduler *DpfScheduler) Run(ctx context.Context) {
-	if !cache.WaitForCacheSync(ctx.Done(), dpfScheduler.informersHaveSynced) {
+func (scheduler *Scheduler) Run(ctx context.Context) {
+	if !cache.WaitForCacheSync(ctx.Done(), scheduler.informersHaveSynced) {
 		return
 	}
-	dpfScheduler.schedulingQueue.Run()
-	//dpfScheduler.flowController.Run()
-	go dpfScheduler.channelHandler()
+	scheduler.schedulingQueue.Run()
+	//scheduler.flowController.Run()
+	go scheduler.channelHandler()
 
-	if dpfScheduler.mode == TScheme {
-		go wait.UntilWithContext(ctx, dpfScheduler.flowReleaseAndAllocate, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
-	}
+	go wait.UntilWithContext(ctx, scheduler.flowReleaseAndAllocate, time.Duration(scheduler.defaultReleasingPeriod)*time.Millisecond)
 
-	go wait.UntilWithContext(ctx, dpfScheduler.checkTimeout, queue.BucketSize*time.Millisecond)
+	go wait.UntilWithContext(ctx, scheduler.checkTimeout, queue.BucketSize*time.Millisecond)
 
-	wait.UntilWithContext(ctx, dpfScheduler.scheduleOne, 0)
+	wait.UntilWithContext(ctx, scheduler.scheduleOne, 0)
 
-	dpfScheduler.schedulingQueue.Close()
-	//dpfScheduler.flowController.Close()
+	scheduler.schedulingQueue.Close()
+	//scheduler.flowController.Close()
 }
 
-func (dpfScheduler *DpfScheduler) scheduleOne(ctx context.Context) {
-	claimHandler := dpfScheduler.NextRequest()
+func (scheduler *Scheduler) scheduleOne(ctx context.Context) {
+	claimHandler := scheduler.NextRequest()
 	// request could be nil when schedulerQueue is closed
 	if claimHandler == nil {
 		time.Sleep(1 * time.Second)
@@ -229,44 +190,44 @@ func (dpfScheduler *DpfScheduler) scheduleOne(ctx context.Context) {
 
 	if requestHandler.IsPending() {
 		klog.Infof("wait the claim with pending request: %s", requestId)
-		_ = dpfScheduler.schedulingQueue.WaitEntry(claimHandler)
+		_ = scheduler.schedulingQueue.WaitEntry(claimHandler)
 		return
 	}
 
 	var isCompleted bool
 
-	dpfScheduler.batch.Lock()
+	scheduler.batch.Lock()
 	switch getRequestType(requestHandler.GetRequest()) {
 	case AllocateRequest:
-		isCompleted = dpfScheduler.batch.BatchAllocate(requestHandler)
+		isCompleted = scheduler.batch.BatchAllocate(requestHandler)
 	case ConsumeRequest:
-		isCompleted = dpfScheduler.batch.BatchConsume(requestHandler)
+		isCompleted = scheduler.batch.BatchConsume(requestHandler)
 	case ReleaseRequest:
-		isCompleted = dpfScheduler.batch.BatchRelease(requestHandler)
+		isCompleted = scheduler.batch.BatchRelease(requestHandler)
 	default:
 		klog.Errorf("unable to get the request type from %v", requestHandler.GetRequest())
-		dpfScheduler.batch.Unlock()
+		scheduler.batch.Unlock()
 		return
 	}
-	dpfScheduler.batch.Unlock()
+	scheduler.batch.Unlock()
 
 	requestHandler = claimHandler.NextRequest()
 	if requestHandler.IsPending() {
 		klog.Infof("wait the claim with pending request: %s", requestId)
-		_ = dpfScheduler.schedulingQueue.WaitEntry(claimHandler)
+		_ = scheduler.schedulingQueue.WaitEntry(claimHandler)
 		return
 	}
 
 	// There are more requests to be handle in this claim
 	if !isCompleted || requestHandler.IsValid() {
 		klog.Infof("reschedule the claim [%s] which has more requests", claimId)
-		if err := dpfScheduler.schedulingQueue.Reschedule(claimHandler); err != nil {
+		if err := scheduler.schedulingQueue.Reschedule(claimHandler); err != nil {
 			klog.Errorf("unable to reschedule: %v", err)
 		}
 		return
 	}
 
-	if err := dpfScheduler.schedulingQueue.ScheduleCompleted(claimId); err == nil {
+	if err := scheduler.schedulingQueue.ScheduleCompleted(claimId); err == nil {
 		klog.Infof("processing the request %s completed", requestId)
 	} else {
 		klog.Infof("failed to complete the scheduling of request %s", requestId)
@@ -287,7 +248,7 @@ func getRequestType(request *columbiav1.Request) string {
 }
 
 func AddAllEventHandlers(
-	privateDataScheduler *DpfScheduler,
+	privateDataScheduler *Scheduler,
 	schedulerName string,
 	privateDataBlockInformer informer.PrivateDataBlockInformer,
 	privacyBudgetClaimInformer informer.PrivacyBudgetClaimInformer,
@@ -346,10 +307,10 @@ func AddAllEventHandlers(
 }
 
 // skipPodSchedule returns true if we could skip scheduling the pod for specified cases.
-func (dpfScheduler *DpfScheduler) skipPodSchedule(pod *v1.Pod) bool {
+func (scheduler *Scheduler) skipPodSchedule(pod *v1.Pod) bool {
 	// Case 1: pod is being deleted.
 	if pod.DeletionTimestamp != nil {
-		dpfScheduler.Recorder.Eventf(pod, v1.EventTypeWarning, "FailedScheduling", "skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
+		scheduler.Recorder.Eventf(pod, v1.EventTypeWarning, "FailedScheduling", "skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
 		klog.V(3).Infof("Skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
 		return true
 	}
@@ -357,53 +318,53 @@ func (dpfScheduler *DpfScheduler) skipPodSchedule(pod *v1.Pod) bool {
 	// Case 2: pod has been assumed and pod updates could be skipped.
 	// An assumed pod can be added again to the scheduling queue if it got an update event
 	// during its previous scheduling cycle but before getting assumed.
-	//if dpfScheduler.skipPodUpdate(pod) {
+	//if scheduler.skipPodUpdate(pod) {
 	//	return true
 	//}
 
 	return false
 }
 
-func (dpfScheduler *DpfScheduler) Now() int64 {
-	return dpfScheduler.timer.Now()
+func (scheduler *Scheduler) Now() int64 {
+	return scheduler.timer.Now()
 }
 
-func (dpfScheduler *DpfScheduler) channelHandler() {
-	for claimId := range dpfScheduler.allocChan {
-		_ = dpfScheduler.schedulingQueue.WakeUpEntry(claimId)
+func (scheduler *Scheduler) channelHandler() {
+	for claimId := range scheduler.allocChan {
+		_ = scheduler.schedulingQueue.WakeUpEntry(claimId)
 	}
 }
 
-func (dpfScheduler *DpfScheduler) checkTimeout(ctx context.Context) {
-	dpfScheduler.batch.Lock()
-	defer dpfScheduler.batch.Unlock()
+func (scheduler *Scheduler) checkTimeout(ctx context.Context) {
+	scheduler.batch.Lock()
+	defer scheduler.batch.Unlock()
 
-	claimHandlers := dpfScheduler.schedulingQueue.PopWaitingUntil(dpfScheduler.timer.Now())
+	claimHandlers := scheduler.schedulingQueue.PopWaitingUntil(scheduler.timer.Now())
 
 	for _, claimHandler := range claimHandlers {
 		requestHandler := claimHandler.NextRequest()
-		dpfScheduler.batch.BatchAllocateTimeout(requestHandler)
+		scheduler.batch.BatchAllocateTimeout(requestHandler)
 
 		// There are more requests to be handle in this claim
 		requestHandler.RequestIndex++
 		if requestHandler.IsValid() {
 			klog.Infof("reschedule the claim [%s] which has more requests", claimHandler.GetId())
-			if err := dpfScheduler.schedulingQueue.Reschedule(claimHandler); err != nil {
+			if err := scheduler.schedulingQueue.Reschedule(claimHandler); err != nil {
 				klog.Errorf("unable to reschedule: %v", err)
 			}
 			continue
 		} else {
-			_ = dpfScheduler.schedulingQueue.ScheduleCompleted(claimHandler.GetId())
+			_ = scheduler.schedulingQueue.ScheduleCompleted(claimHandler.GetId())
 			klog.Infof("processing the requests of claim %s completed", claimHandler.GetId())
 		}
 	}
 
 }
 
-func (dpfScheduler *DpfScheduler) flowReleaseAndAllocate(ctx context.Context) {
-	dpfScheduler.batch.Lock()
-	defer dpfScheduler.batch.Unlock()
+func (scheduler *Scheduler) flowReleaseAndAllocate(ctx context.Context) {
+	scheduler.batch.Lock()
+	defer scheduler.batch.Unlock()
 
-	blockStates := dpfScheduler.flowController.Release()
-	dpfScheduler.batch.AllocateAvailableBudgets(blockStates)
+	blockStates := scheduler.flowController.Release()
+	scheduler.batch.AllocateAvailableBudgets(blockStates)
 }

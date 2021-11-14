@@ -1,21 +1,21 @@
 package scheduler
 
 import (
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
 )
 
-func (dpfScheduler *DpfScheduler) addBlock(obj interface{}) {
+func (scheduler *Scheduler) addBlock(obj interface{}) {
 	block, ok := obj.(*columbiav1.PrivateDataBlock)
 	if !ok {
 		klog.Errorf("cannot convert to *v1.PrivacyDataBlock: %v", obj)
 		return
 	}
 
-	blockState, err := dpfScheduler.cache.AddBlock(block)
+	blockState, err := scheduler.cache.AddBlock(block)
 	if err != nil {
 		klog.Errorf("scheduler cache AddBlock failed: %v", err)
 		return
@@ -25,12 +25,12 @@ func (dpfScheduler *DpfScheduler) addBlock(obj interface{}) {
 	refresh := func(block *columbiav1.PrivateDataBlock) error {
 		return nil
 	}
-	dpfScheduler.updater.ApplyOperationToDataBlock(refresh, blockState)
+	scheduler.updater.ApplyOperationToDataBlock(refresh, blockState)
 
 	klog.Infof("get a new block %s", util.GetBlockId(block))
 }
 
-func (dpfScheduler *DpfScheduler) updateBlock(oldObj, newObj interface{}) {
+func (scheduler *Scheduler) updateBlock(oldObj, newObj interface{}) {
 	newBlock, ok := newObj.(*columbiav1.PrivateDataBlock)
 	if !ok {
 		klog.Errorf("cannot convert newObj to *v1.Request: %v", newObj)
@@ -38,7 +38,7 @@ func (dpfScheduler *DpfScheduler) updateBlock(oldObj, newObj interface{}) {
 	}
 
 	var err error
-	if _, err = dpfScheduler.cache.UpdateBlock(newBlock); err != nil {
+	if _, err = scheduler.cache.UpdateBlock(newBlock); err != nil {
 		klog.Errorf("scheduler cache UpdateBlock failed: %v", err)
 		return
 	}
@@ -47,7 +47,7 @@ func (dpfScheduler *DpfScheduler) updateBlock(oldObj, newObj interface{}) {
 
 }
 
-func (dpfScheduler *DpfScheduler) deleteBlock(obj interface{}) {
+func (scheduler *Scheduler) deleteBlock(obj interface{}) {
 	var block *columbiav1.PrivateDataBlock
 	switch t := obj.(type) {
 	case *columbiav1.PrivateDataBlock:
@@ -64,14 +64,14 @@ func (dpfScheduler *DpfScheduler) deleteBlock(obj interface{}) {
 		return
 	}
 	blockId := util.GetBlockId(block)
-	if err := dpfScheduler.cache.DeleteBlock(blockId); err != nil {
+	if err := scheduler.cache.DeleteBlock(blockId); err != nil {
 		klog.Errorf("scheduler cache RemoveNode failed: %v", err)
 	}
 
 	klog.Infof("Private Data Block [%s] has been deleted", blockId)
 }
 
-func (dpfScheduler *DpfScheduler) addClaim(obj interface{}) {
+func (scheduler *Scheduler) addClaim(obj interface{}) {
 	claim, ok := obj.(*columbiav1.PrivacyBudgetClaim)
 	if !ok {
 		klog.Errorf("cannot convert to *PrivacyBudgetClaim: %v", obj)
@@ -81,15 +81,15 @@ func (dpfScheduler *DpfScheduler) addClaim(obj interface{}) {
 	var err error
 	var claimHandler framework.ClaimHandler
 
-	if claimHandler, err = dpfScheduler.cache.AddClaim(claim); err != nil {
+	if claimHandler, err = scheduler.cache.AddClaim(claim); err != nil {
 		klog.Errorf("scheduler cache AddPod failed: %v", err)
 	}
 
-	dpfScheduler.enqueueClaim(claimHandler)
+	scheduler.enqueueClaim(claimHandler)
 	klog.Infof("Privacy Budget Claim [%s] is added!", util.GetClaimId(claim))
 }
 
-func (dpfScheduler *DpfScheduler) updateClaim(oldObj, newObj interface{}) {
+func (scheduler *Scheduler) updateClaim(oldObj, newObj interface{}) {
 	_, ok := oldObj.(*columbiav1.PrivacyBudgetClaim)
 	if !ok {
 		klog.Errorf("cannot convert oldObj to *PrivacyBudgetClaim: %v", oldObj)
@@ -105,15 +105,15 @@ func (dpfScheduler *DpfScheduler) updateClaim(oldObj, newObj interface{}) {
 	var err error
 	var claimHandler framework.ClaimHandler
 
-	if claimHandler, err = dpfScheduler.cache.UpdateClaim(newClaim); err != nil {
+	if claimHandler, err = scheduler.cache.UpdateClaim(newClaim); err != nil {
 		klog.Errorf("scheduler cache update Privacy Budget Claim failed: %v", err)
 	}
 
-	dpfScheduler.enqueueClaim(claimHandler)
+	scheduler.enqueueClaim(claimHandler)
 	klog.Infof("Privacy Budget Claim [%v] has been updated! ", util.GetClaimId(newClaim))
 }
 
-func (dpfScheduler *DpfScheduler) deleteClaim(obj interface{}) {
+func (scheduler *Scheduler) deleteClaim(obj interface{}) {
 	var claim *columbiav1.PrivacyBudgetClaim
 	var claimId string
 	switch t := obj.(type) {
@@ -132,9 +132,9 @@ func (dpfScheduler *DpfScheduler) deleteClaim(obj interface{}) {
 	}
 
 	claimId = util.GetClaimId(claim)
-	dpfScheduler.dequeueClaim(claim)
+	scheduler.dequeueClaim(claim)
 
-	if err := dpfScheduler.cache.DeleteClaim(claimId); err != nil {
+	if err := scheduler.cache.DeleteClaim(claimId); err != nil {
 		klog.Errorf("failed to delete claim from cache: %v", err)
 		return
 	}
@@ -142,15 +142,15 @@ func (dpfScheduler *DpfScheduler) deleteClaim(obj interface{}) {
 	klog.Infof("Privacy Budget Claim [%v] has been deleted!", claimId)
 }
 
-func (dpfScheduler *DpfScheduler) enqueueClaim(handler framework.ClaimHandler) {
+func (scheduler *Scheduler) enqueueClaim(handler framework.ClaimHandler) {
 	request := handler.NextRequest()
 	if !request.IsValid() {
 		return
 	}
 
-	_ = dpfScheduler.schedulingQueue.Add(handler)
+	_ = scheduler.schedulingQueue.Add(handler)
 }
 
-func (dpfScheduler *DpfScheduler) dequeueClaim(claim *columbiav1.PrivacyBudgetClaim) {
-	_ = dpfScheduler.schedulingQueue.Delete(util.GetClaimId(claim))
+func (scheduler *Scheduler) dequeueClaim(claim *columbiav1.PrivacyBudgetClaim) {
+	_ = scheduler.schedulingQueue.Delete(util.GetClaimId(claim))
 }

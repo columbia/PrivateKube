@@ -1,10 +1,10 @@
 package flowreleasing
 
 import (
-	schedulercache "columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
+	schedulercache "columbia.github.com/privatekube/scheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/updater"
 )
 
 type Controller struct {

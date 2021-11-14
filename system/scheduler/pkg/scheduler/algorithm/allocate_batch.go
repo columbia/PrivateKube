@@ -5,18 +5,18 @@ import (
 	"math"
 	"sync"
 
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/cache"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/errors"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/timing"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/updater"
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler/util"
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"columbia.github.com/privatekube/privacyresource/pkg/framework"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/cache"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/errors"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/timing"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/updater"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler/util"
 	"k8s.io/klog"
 )
 
-// DpfBatch is a snapshot of the tasks waiting to be allocated + the set of blocks and their available budgets
-type DpfBatch struct {
+// Batch is a snapshot of the tasks waiting to be allocated + the set of blocks and their available budgets
+type Batch struct {
 	sync.Mutex
 	core    CoreAlgorithm
 	updater updater.ResourceUpdater
@@ -27,13 +27,13 @@ type DpfBatch struct {
 	p2Chan chan<- string
 }
 
-func NewDpfBatch(
+func NewBatch(
 	updater updater.ResourceUpdater,
 	cache_ cache.Cache,
 	p2Chan chan<- string,
-) *DpfBatch {
+) *Batch {
 
-	return &DpfBatch{
+	return &Batch{
 		core:    CoreAlgorithm{},
 		updater: updater,
 		cache:   cache_,
@@ -42,7 +42,7 @@ func NewDpfBatch(
 }
 
 // BatchAllocateP2 tries to allocate a request
-func (dpf *DpfBatch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlockIds []string) bool {
+func (batch *Batch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlockIds []string) bool {
 	requestHandler := claimState.NextRequest()
 
 	requestViewer := requestHandler.Viewer()
@@ -60,7 +60,7 @@ func (dpf *DpfBatch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlo
 	}
 
 	blockIds := util.GetStringKeysFromMap(requestViewer.Claim.Status.ReservedBudgets)
-	blockStates := dpf.cache.GetBlocks(blockIds)
+	blockStates := batch.cache.GetBlocks(blockIds)
 
 	// Get all the data block handled by the scheduler before
 	// This action can avoid duplicated handling on the same data block
@@ -81,11 +81,11 @@ func (dpf *DpfBatch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlo
 				return fmt.Errorf("data block is not ready")
 			}
 
-			allocatedBudget, err = dpf.core.AllocateP2(requestViewer, block, toAcquire)
+			allocatedBudget, err = batch.core.AllocateP2(requestViewer, block, toAcquire)
 			return err
 		}
 
-		err := dpf.updater.ApplyOperationToDataBlock(allocateStrategy, blockState)
+		err := batch.updater.ApplyOperationToDataBlock(allocateStrategy, blockState)
 
 		if err != nil {
 			klog.Errorf("failed to allocate budget from data block [%s] to request [%s]: %v",
@@ -120,7 +120,7 @@ func (dpf *DpfBatch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlo
 	if minNumOfBlocks == columbiav1.StrictAllOrNothing && successBlockCount != len(blockStates) {
 		// try to rollback all the qualified data blocks in case some of them were allocated by last
 		// scheduling terminated accidentally
-		return dpf.BatchRollback(blockStates, requestHandler, errors.AllOrNothingError(nil).Error())
+		return batch.BatchRollback(blockStates, requestHandler, errors.AllOrNothingError(nil).Error())
 	}
 
 	if successBlockCount < minNumOfBlocks {
@@ -128,31 +128,31 @@ func (dpf *DpfBatch) BatchAllocateP2(claimState *cache.ClaimState, allocatingBlo
 		klog.Errorf("failed to allocate enough data blocks to request [%s]", requestHandler.GetId())
 		// try to rollback all the qualified data blocks in case some of them were allocated by last
 		// scheduling terminated accidentally
-		return dpf.BatchRollback(blockStates, requestHandler, err.Error())
+		return batch.BatchRollback(blockStates, requestHandler, err.Error())
 	}
 
 	// Now enters the second phase of 2PC.
 	// A decision will be first updated in the claim's response
-	dpf.batchCompleteAcquiring(blockStates, requestHandler, allocatedBudgets)
+	batch.batchCompleteAcquiring(blockStates, requestHandler, allocatedBudgets)
 	return true
 }
 
-func (dpf *DpfBatch) BatchAllocateTimeout(requestHandler framework.RequestHandler) bool {
+func (batch *Batch) BatchAllocateTimeout(requestHandler framework.RequestHandler) bool {
 	requestViewer := requestHandler.Viewer()
 	if !requestViewer.IsPending() {
 		return false
 	}
 
 	timeoutStrategy := func(block *columbiav1.PrivateDataBlock) error {
-		return dpf.core.AllocateTimeout(requestViewer, block)
+		return batch.core.AllocateTimeout(requestViewer, block)
 	}
 
 	blockIds := util.GetStringKeysFromMap(requestViewer.Claim.Status.ReservedBudgets)
-	blockStates := dpf.cache.GetBlocks(blockIds)
+	blockStates := batch.cache.GetBlocks(blockIds)
 
 	done := make(chan bool)
 	timeoutWrapper := func(blockState *cache.BlockState) {
-		if err := dpf.updater.ApplyOperationToDataBlock(timeoutStrategy, blockState); err == nil {
+		if err := batch.updater.ApplyOperationToDataBlock(timeoutStrategy, blockState); err == nil {
 			klog.Infof("succeeded to timeout pending request [%s] at data block [%s]",
 				requestHandler.GetId(), blockState.GetId())
 
@@ -177,13 +177,13 @@ func (dpf *DpfBatch) BatchAllocateTimeout(requestHandler framework.RequestHandle
 
 	// Now enters the second phase of 2PC.
 	// A decision will be first updated in the claim's response
-	dpf.BatchRollback(blockStates, requestHandler, "timeout")
+	batch.BatchRollback(blockStates, requestHandler, "timeout")
 	return true
 }
 
 // getInfluencedClaims fetches all the claims that demand one of the blocks
 // It computes the dominant share for each claim
-func (dpf *DpfBatch) getInfluencedClaims(blockStates []*cache.BlockState) map[string]cache.ShareInfo {
+func (batch *Batch) getInfluencedClaims(blockStates []*cache.BlockState) map[string]cache.ShareInfo {
 	claimShareMap := map[string]cache.ShareInfo{}
 
 	for _, blockState := range blockStates {
@@ -200,7 +200,7 @@ func (dpf *DpfBatch) getInfluencedClaims(blockStates []*cache.BlockState) map[st
 				continue
 			}
 
-			claimState := dpf.cache.GetClaim(claimId)
+			claimState := batch.cache.GetClaim(claimId)
 			share := claimState.UpdateDominantShare()
 			if share.IsReadyToAllocate {
 				claimShareMap[claimId] = share
@@ -213,7 +213,7 @@ func (dpf *DpfBatch) getInfluencedClaims(blockStates []*cache.BlockState) map[st
 	return claimShareMap
 }
 
-func (dpf *DpfBatch) updateAffectedClaims(claimShareMap map[string]cache.ShareInfo, blockStates []string) {
+func (batch *Batch) updateAffectedClaims(claimShareMap map[string]cache.ShareInfo, blockStates []string) {
 	blockIdSet := map[string]bool{}
 	for _, blockId := range blockStates {
 		blockIdSet[blockId] = true
@@ -221,7 +221,7 @@ func (dpf *DpfBatch) updateAffectedClaims(claimShareMap map[string]cache.ShareIn
 
 	// update claim share map
 	for claimId := range claimShareMap {
-		claimState := dpf.cache.GetClaim(claimId)
+		claimState := batch.cache.GetClaim(claimId)
 		affected := false
 
 		claimState.RLock()
@@ -246,12 +246,12 @@ func (dpf *DpfBatch) updateAffectedClaims(claimShareMap map[string]cache.ShareIn
 	}
 }
 
-// AllocateAvailableBudgets is the main loop of DPF
+// AllocateAvailableBudgets is the main loop of Scheduling
 // Takes a batch of tasks + a state and tries to allocate everything
-func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
+func (batch *Batch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 
 	// Compute the dominant shares
-	claimShareMap := dpf.getInfluencedClaims(blockStates)
+	claimShareMap := batch.getInfluencedClaims(blockStates)
 	for {
 		if len(claimShareMap) == 0 {
 			break
@@ -270,7 +270,7 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 
 			if shareInfo.DominantShare < minDominantShare {
 				minDominantShare = shareInfo.DominantShare
-				minShareClaim = dpf.cache.GetClaim(claimId)
+				minShareClaim = batch.cache.GetClaim(claimId)
 				minShareInfo = shareInfo
 			}
 		}
@@ -284,10 +284,10 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 		delete(claimShareMap, minShareClaim.GetId())
 
 		klog.Infof("ready to convert pending budget to acquired budget of claim [%s]", minShareClaim.GetId())
-		if dpf.BatchAllocateP2(minShareClaim, minShareInfo.AvailableBlocks) {
+		if batch.BatchAllocateP2(minShareClaim, minShareInfo.AvailableBlocks) {
 			// notify exterior that this claim has been allocated
-			dpf.p2Chan <- minShareClaim.GetId()
-			dpf.updateAffectedClaims(claimShareMap, minShareInfo.AvailableBlocks)
+			batch.p2Chan <- minShareClaim.GetId()
+			batch.updateAffectedClaims(claimShareMap, minShareInfo.AvailableBlocks)
 		} else {
 			klog.Infof("fail to convert pending budget of claim [%s]", minShareClaim.GetId())
 		}
@@ -295,9 +295,9 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 
 }
 
-func (dpf *DpfBatch) batchCompleteReserving(blockStates []*cache.BlockState, requestHandler framework.RequestHandler, allocatedBudgets map[string]columbiav1.BudgetAccount) {
+func (batch *Batch) batchCompleteReserving(blockStates []*cache.BlockState, requestHandler framework.RequestHandler, allocatedBudgets map[string]columbiav1.BudgetAccount) {
 	// add a failure response to the privacy budget claim
-	err := dpf.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
+	err := batch.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
 		if len(claim.Status.Responses) > requestHandler.RequestIndex {
 			return nil
 		}
@@ -307,7 +307,7 @@ func (dpf *DpfBatch) batchCompleteReserving(blockStates []*cache.BlockState, req
 			State:      columbiav1.Pending,
 			AllocateResponse: &columbiav1.AllocateResponse{
 				Budgets:   allocatedBudgets,
-				StartTime: dpf.timer.Now(),
+				StartTime: batch.timer.Now(),
 			},
 		})
 
@@ -328,7 +328,7 @@ func (dpf *DpfBatch) batchCompleteReserving(blockStates []*cache.BlockState, req
 
 	done := make(chan bool)
 	completeWrapper := func(blockState *cache.BlockState) {
-		err = dpf.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
+		err = batch.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
 			return completeDpfReserving(requestViewer, block)
 		}, blockState)
 
@@ -352,19 +352,19 @@ func (dpf *DpfBatch) batchCompleteReserving(blockStates []*cache.BlockState, req
 }
 
 // Gives the allocatedBudgets to the RequestHandler to update the claim
-func (dpf *DpfBatch) batchCompleteAcquiring(blockStates []*cache.BlockState,
+func (batch *Batch) batchCompleteAcquiring(blockStates []*cache.BlockState,
 	requestHandler framework.RequestHandler,
 	allocatedBudgets map[string]columbiav1.BudgetAccount) {
 
 	// skip if the success has already been added
-	err := dpf.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
+	err := batch.updater.ApplyOperationToClaim(func(claim *columbiav1.PrivacyBudgetClaim) error {
 
 		response := columbiav1.Response{
 			Identifier: claim.Spec.Requests[requestHandler.RequestIndex].Identifier,
 			State:      columbiav1.Success,
 			AllocateResponse: &columbiav1.AllocateResponse{
 				Budgets:    allocatedBudgets,
-				FinishTime: dpf.timer.Now(),
+				FinishTime: batch.timer.Now(),
 			},
 		}
 
@@ -408,7 +408,7 @@ func (dpf *DpfBatch) batchCompleteAcquiring(blockStates []*cache.BlockState,
 
 	done := make(chan bool)
 	completeWrapper := func(blockState *cache.BlockState) {
-		err = dpf.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
+		err = batch.updater.ApplyOperationToDataBlock(func(block *columbiav1.PrivateDataBlock) error {
 			return completeDpfAcquiring(requestViewer, block)
 		}, blockState)
 

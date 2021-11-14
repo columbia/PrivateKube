@@ -1,9 +1,9 @@
 package main
 
 import (
-	"columbia.github.com/privatekube/dpfscheduler/pkg/scheduler"
 	"columbia.github.com/privatekube/privacycontrollers/pkg/blockclaimsync"
 	"columbia.github.com/privatekube/privacycontrollers/pkg/datablocklifecycle"
+	"columbia.github.com/privatekube/scheduler/pkg/scheduler"
 
 	//"columbia.github.com/privatekube/privacycontrollers/pkg/datablocklifecycle"
 	"context"
@@ -65,42 +65,26 @@ func main() {
 	coreBroadcaster := record.NewBroadcaster()
 	coreRecorder := coreBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "privacyscheduler"})
 
-	var privacyScheduler *scheduler.DpfScheduler
+	var privacyScheduler *scheduler.Scheduler
 	var option scheduler.DpfSchedulerOption
 	var blockLifecycleOption datablocklifecycle.BlockLifecycleOption
 
-	if mode == scheduler.TScheme {
-		option = scheduler.DefaultTSchemeOption()
-		if releasingPeriod >= 0 {
-			option.DefaultReleasingPeriod = releasingPeriod
-		}
+	option = scheduler.DefaultTSchemeOption()
+	if releasingPeriod >= 0 {
+		option.DefaultReleasingPeriod = releasingPeriod
+	}
 
-		if releasingDuration >= 0 {
-			option.DefaultReleasingDuration = releasingDuration
-		}
+	if releasingDuration >= 0 {
+		option.DefaultReleasingDuration = releasingDuration
+	}
 
-		if timeout >= 0 {
-			option.DefaultTimeout = timeout
-		}
+	if timeout >= 0 {
+		option.DefaultTimeout = timeout
+	}
 
-		blockLifecycleOption = datablocklifecycle.BlockLifecycleOption{
-			SchedulingPolicy:           datablocklifecycle.DpfT,
-			DeletionGracePeriodSeconds: 30,
-		}
-	} else {
-		option = scheduler.DefaultNSchemeOption()
-		if n > 0 {
-			option.N = n
-		}
-
-		if timeout >= 0 {
-			option.DefaultTimeout = timeout
-		}
-
-		blockLifecycleOption = datablocklifecycle.BlockLifecycleOption{
-			SchedulingPolicy:           datablocklifecycle.DpfN,
-			DeletionGracePeriodSeconds: 30,
-		}
+	blockLifecycleOption = datablocklifecycle.BlockLifecycleOption{
+		SchedulingPolicy:           datablocklifecycle.DpfT,
+		DeletionGracePeriodSeconds: 30,
 	}
 
 	privacyScheduler, _ = scheduler.New(privacyResourceClient, privateDataBlockInformer,
@@ -127,8 +111,7 @@ func main() {
 func init() {
 	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
-	flag.IntVar(&mode, "mode", scheduler.NScheme, "Scheduling Mode (Policy): 0 is DPF N, 1 is DPF T")
-	flag.IntVar(&n, "n", -1, "Default N value for DPF N mode")
+	flag.IntVar(&n, "n", 500, "Default N value")
 	flag.Int64Var(&timeout, "timeout", -1, "Default timeout for pending requests. Unit is millisecond.")
 	flag.Int64Var(&releasingDuration, "releasingDuration", -1, "Default releasing duration for pending requests for DPF T mode. Unit is millisecond.")
 	flag.Int64Var(&releasingPeriod, "releasingPeriod", -1, "Default releasing period for pending requests for DPF T mode. Unit is millisecond.")
