@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"math"
 	"sync"
 
 	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
@@ -56,56 +55,6 @@ func (slice blockCostSlice) Less(i, j int) bool {
 func (slice blockCostSlice) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
-
-//func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
-//	claimState.Lock()
-//	defer claimState.Unlock()
-//
-//	if !claimState.hasPendingRequest() {
-//		return
-//	}
-//
-//	// maxN is the max number of blocks
-//	// minN is the min number of blocks
-//	pendingRequest := claimState.claim.Spec.Requests[claimState.nextIndex].AllocateRequest
-//	maxN := pendingRequest.MaxNumberOfBlocks
-//
-//	if maxN == 0 {
-//		maxN = len(claimState.Demands)
-//	}
-//
-//	pairs := make(blockShareSlice, 0, len(claimState.Demands))
-//	for blockId, demand := range claimState.Demands {
-//		if !demand.Availability {
-//			continue
-//		}
-//
-//		pairs = append(pairs, blockSharePair{demand.Share, blockId})
-//	}
-//
-//	// the reason of len(pairs) < maxN is that the scheduler will try to allocate all the data blocks up to maxN.
-//	// If the current condition does not have maxN data blocks available to allocated to a claim, then the scheduler will
-//	// not schedule this claim.
-//	if len(pairs) < maxN {
-//		result.IsReadyToAllocate = false
-//		return
-//	}
-//	result.IsReadyToAllocate = true
-//
-//	// else case will be maxN == len(pairs). In this case, no need to select the first maxN.
-//	if maxN < len(pairs) {
-//		_ = quickselect.QuickSelect(pairs, maxN)
-//	}
-//
-//	result.DominantShare = 0
-//	result.AvailableBlocks = make([]string, 0, maxN)
-//	for _, pair := range pairs[:maxN] {
-//		result.DominantShare = math.Max(result.DominantShare, pair.share)
-//		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
-//	}
-//
-//	return
-//}
 
 func (claimState *ClaimState) UpdateTotalCost() (result CostInfo) {
 	claimState.Lock()

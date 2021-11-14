@@ -182,9 +182,9 @@ func (batch *Batch) BatchAllocateTimeout(requestHandler framework.RequestHandler
 }
 
 // getInfluencedClaims fetches all the claims that demand one of the blocks
-// It computes the dominant share for each claim
-func (batch *Batch) getInfluencedClaims(blockStates []*cache.BlockState) map[string]cache.ShareInfo {
-	claimShareMap := map[string]cache.ShareInfo{}
+// It computes the cost for each claim
+func (batch *Batch) getInfluencedClaims(blockStates []*cache.BlockState) map[string]cache.CostInfo {
+	claimCostMap := map[string]cache.CostInfo{}
 
 	for _, blockState := range blockStates {
 		blockState.RLock()
@@ -196,31 +196,31 @@ func (batch *Batch) getInfluencedClaims(blockStates []*cache.BlockState) map[str
 			}
 
 			// If this claim has been evaluated before, skip it.
-			if _, ok := claimShareMap[claimId]; ok {
+			if _, ok := claimCostMap[claimId]; ok {
 				continue
 			}
 
 			claimState := batch.cache.GetClaim(claimId)
-			share := claimState.UpdateDominantShare()
-			if share.IsReadyToAllocate {
-				claimShareMap[claimId] = share
+			cost := claimState.UpdateTotalCost()
+			if cost.IsReadyToAllocate {
+				claimCostMap[claimId] = cost
 			}
 
 		}
 		blockState.RUnlock()
 	}
 
-	return claimShareMap
+	return claimCostMap
 }
 
-func (batch *Batch) updateAffectedClaims(claimShareMap map[string]cache.ShareInfo, blockStates []string) {
+func (batch *Batch) updateAffectedClaims(claimCostMap map[string]cache.CostInfo, blockStates []string) {
 	blockIdSet := map[string]bool{}
 	for _, blockId := range blockStates {
 		blockIdSet[blockId] = true
 	}
 
-	// update claim share map
-	for claimId := range claimShareMap {
+	// update claim cost map
+	for claimId := range claimCostMap {
 		claimState := batch.cache.GetClaim(claimId)
 		affected := false
 
@@ -237,11 +237,11 @@ func (batch *Batch) updateAffectedClaims(claimShareMap map[string]cache.ShareInf
 			continue
 		}
 
-		shareInfo := claimState.UpdateDominantShare()
-		if shareInfo.IsReadyToAllocate {
-			claimShareMap[claimId] = shareInfo
+		costInfo := claimState.UpdateTotalCost()
+		if costInfo.IsReadyToAllocate {
+			claimCostMap[claimId] = costInfo
 		} else {
-			delete(claimShareMap, claimId)
+			delete(claimCostMap, claimId)
 		}
 	}
 }
@@ -250,46 +250,46 @@ func (batch *Batch) updateAffectedClaims(claimShareMap map[string]cache.ShareInf
 // Takes a batch of tasks + a state and tries to allocate everything
 func (batch *Batch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 
-	// Compute the dominant shares
-	claimShareMap := batch.getInfluencedClaims(blockStates)
+	// Compute the costs
+	claimCostMap := batch.getInfluencedClaims(blockStates)
 	for {
-		if len(claimShareMap) == 0 {
+		if len(claimCostMap) == 0 {
 			break
 		}
 
-		var minShareClaim *cache.ClaimState
-		var minDominantShare = math.MaxFloat64
-		var minShareInfo cache.ShareInfo
+		var minCostClaim *cache.ClaimState
+		var minCost = math.MaxFloat64
+		var minCostInfo cache.CostInfo
 
 		// Browse claims to find the smallest and remove those which are impossible to allocate
-		for claimId, shareInfo := range claimShareMap {
-			if !shareInfo.IsReadyToAllocate {
-				delete(claimShareMap, claimId) // Safe to delete
+		for claimId, costInfo := range claimCostMap {
+			if !costInfo.IsReadyToAllocate {
+				delete(claimCostMap, claimId) // Safe to delete
 				continue
 			}
 
-			if shareInfo.DominantShare < minDominantShare {
-				minDominantShare = shareInfo.DominantShare
-				minShareClaim = batch.cache.GetClaim(claimId)
-				minShareInfo = shareInfo
+			if costInfo.Cost < minCost {
+				minCost = costInfo.Cost
+				minCostClaim = batch.cache.GetClaim(claimId)
+				minCostInfo = costInfo
 			}
 		}
 
-		if minShareClaim == nil {
+		if minCostClaim == nil {
 			break
 		}
 
 		// Pop the smallest claim, since we are going to allocate it
 		// They will be tried in next iteration when more budget becomes available.
-		delete(claimShareMap, minShareClaim.GetId())
+		delete(claimCostMap, minCostClaim.GetId())
 
-		klog.Infof("ready to convert pending budget to acquired budget of claim [%s]", minShareClaim.GetId())
-		if batch.BatchAllocateP2(minShareClaim, minShareInfo.AvailableBlocks) {
+		klog.Infof("ready to convert pending budget to acquired budget of claim [%s]", minCostClaim.GetId())
+		if batch.BatchAllocateP2(minCostClaim, minCostInfo.AvailableBlocks) {
 			// notify exterior that this claim has been allocated
-			batch.p2Chan <- minShareClaim.GetId()
-			batch.updateAffectedClaims(claimShareMap, minShareInfo.AvailableBlocks)
+			batch.p2Chan <- minCostClaim.GetId()
+			batch.updateAffectedClaims(claimCostMap, minCostInfo.AvailableBlocks)
 		} else {
-			klog.Infof("fail to convert pending budget of claim [%s]", minShareClaim.GetId())
+			klog.Infof("fail to convert pending budget of claim [%s]", minCostClaim.GetId())
 		}
 	}
 
