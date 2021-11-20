@@ -18,10 +18,11 @@ import (
 // DpfBatch is a snapshot of the tasks waiting to be allocated + the set of blocks and their available budgets
 type DpfBatch struct {
 	sync.Mutex
-	core    CoreAlgorithm
-	updater updater.ResourceUpdater
-	cache   cache.Cache
-	timer   timing.Timer
+	core      CoreAlgorithm
+	updater   updater.ResourceUpdater
+	cache     cache.Cache
+	timer     timing.Timer
+	scheduler string
 
 	// channel used in P2 Allocate to notify exterior about the allocation
 	p2Chan chan<- string
@@ -31,13 +32,15 @@ func NewDpfBatch(
 	updater updater.ResourceUpdater,
 	cache_ cache.Cache,
 	p2Chan chan<- string,
+	scheduler string,
 ) *DpfBatch {
 
 	return &DpfBatch{
-		core:    CoreAlgorithm{},
-		updater: updater,
-		cache:   cache_,
-		p2Chan:  p2Chan,
+		core:      CoreAlgorithm{},
+		updater:   updater,
+		cache:     cache_,
+		p2Chan:    p2Chan,
+		scheduler: scheduler,
 	}
 }
 
@@ -182,7 +185,7 @@ func (dpf *DpfBatch) BatchAllocateTimeout(requestHandler framework.RequestHandle
 }
 
 // getInfluencedClaims fetches all the claims that demand one of the blocks
-// It computes the dominant share for each claim
+// It computes the dominant share or the cost for each claim
 func (dpf *DpfBatch) getInfluencedClaims(blockStates []*cache.BlockState) map[string]cache.ShareInfo {
 	claimShareMap := map[string]cache.ShareInfo{}
 
@@ -201,7 +204,13 @@ func (dpf *DpfBatch) getInfluencedClaims(blockStates []*cache.BlockState) map[st
 			}
 
 			claimState := dpf.cache.GetClaim(claimId)
-			share := claimState.UpdateDominantShare()
+			share := cache.ShareInfo{}
+			if dpf.scheduler == util.DPF {
+				share = claimState.UpdateDominantShare()
+			} else {
+				share = claimState.UpdateTotalCost()
+			}
+
 			if share.IsReadyToAllocate {
 				claimShareMap[claimId] = share
 			}
@@ -237,7 +246,13 @@ func (dpf *DpfBatch) updateAffectedClaims(claimShareMap map[string]cache.ShareIn
 			continue
 		}
 
-		shareInfo := claimState.UpdateDominantShare()
+		shareInfo := cache.ShareInfo{}
+		if dpf.scheduler == util.DPF {
+			shareInfo = claimState.UpdateDominantShare()
+		} else {
+			shareInfo = claimState.UpdateTotalCost()
+		}
+		//shareInfo := claimState.UpdateDominantShare()
 		if shareInfo.IsReadyToAllocate {
 			claimShareMap[claimId] = shareInfo
 		} else {
@@ -258,7 +273,7 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 		}
 
 		var minShareClaim *cache.ClaimState
-		var minDominantShare = math.MaxFloat64
+		var minVal = math.MaxFloat64
 		var minShareInfo cache.ShareInfo
 
 		// Browse claims to find the smallest and remove those which are impossible to allocate
@@ -268,10 +283,18 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 				continue
 			}
 
-			if shareInfo.DominantShare < minDominantShare {
-				minDominantShare = shareInfo.DominantShare
-				minShareClaim = dpf.cache.GetClaim(claimId)
-				minShareInfo = shareInfo
+			if dpf.scheduler == util.DPF {
+				if shareInfo.DominantShare < minVal {
+					minVal = shareInfo.DominantShare
+					minShareClaim = dpf.cache.GetClaim(claimId)
+					minShareInfo = shareInfo
+				}
+			} else {
+				if shareInfo.Cost < minVal {
+					minVal = shareInfo.Cost
+					minShareClaim = dpf.cache.GetClaim(claimId)
+					minShareInfo = shareInfo
+				}
 			}
 		}
 

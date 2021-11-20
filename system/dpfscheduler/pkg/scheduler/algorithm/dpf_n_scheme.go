@@ -29,10 +29,11 @@ func NewDpfNSchemeBatch(
 	updater updater.ResourceUpdater,
 	cache_ *cache.StateCache,
 	p2Chan chan<- string,
+	scheduler string,
 ) *DpfNSchemeBatch {
 
 	return &DpfNSchemeBatch{
-		DpfBatch: *NewDpfBatch(updater, cache_, p2Chan),
+		DpfBatch: *NewDpfBatch(updater, cache_, p2Chan, scheduler),
 		K:        k,
 	}
 }

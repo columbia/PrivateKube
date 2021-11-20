@@ -15,29 +15,33 @@ import (
 )
 
 var (
-	DPF_N                      int
-	pipeline_timeout_blocks    int
-	epsilon                    float64
-	delta                      float64
-	rdp                        int
-	n_blocks                   int
-	block_interval_millisecond int
-	elephants_dir              string
-	mice_dir                   string
-	mice_ratio                 float64
-	mean_pipelines_per_block   float64
-	initial_blocks             int
-	output_claims              string
-	output_blocks              string
-	profile                    string
-	mode                       string
-	DPF_T                      int
-	dpf_release_period_block   float64
+	DPF_N                               int
+	pipeline_timeout_blocks             int
+	epsilon                             float64
+	delta                               float64
+	rdp                                 int
+	n_blocks                            int
+	block_interval_millisecond          int
+	elephants_dir                       string
+	mice_dir                            string
+	mice_ratio                          float64
+	mean_pipelines_per_block            float64
+	initial_blocks                      int
+	output_claims                       string
+	output_blocks                       string
+	profile                             string
+	mode                                string
+	scheduler_method                    string
+	DPF_T                               int
+	release_steps_per_scheduling_period int
+	dpf_release_period_block            float64
 )
 
 func init() {
+	flag.StringVar(&scheduler_method, "scheduler", "DPF", "Scheduler mode.")
 	flag.StringVar(&mode, "mode", "N", "DPF's mode. Either `N` or `T`.")
 	flag.IntVar(&DPF_T, "T", 1, "The value of T for DPF's T-scheme. The budget for each block is completely released after T-1 periods.")
+	flag.IntVar(&release_steps_per_scheduling_period, "T_scheduling", 1, "The time interval between two scheduling cycles is T_scheduling * block budget release time.")
 	flag.Float64Var(&dpf_release_period_block, "release_period", -1, "The release period for DPF-T, in blocks duration. If not specified, we will use 0.5 * (mean pipeline arrival time)")
 	flag.IntVar(&DPF_N, "N", 1, "The value of N for DPF's N-scheme")
 	flag.IntVar(&pipeline_timeout_blocks, "timeout", 5, "pipeline_timeout_blocks")
@@ -81,7 +85,7 @@ func main() {
 		gamma = 0.05
 	}
 
-	run_exponential(mode, DPF_T, dpf_release_period_block, DPF_N, pipeline_timeout_blocks, epsilon, delta, gamma, n_blocks, block_interval_millisecond, elephants_dir, mice_dir, mice_ratio, mean_pipelines_per_block, initial_blocks, output_blocks, output_claims)
+	run_exponential(scheduler_method, mode, DPF_T, release_steps_per_scheduling_period, dpf_release_period_block, DPF_N, pipeline_timeout_blocks, epsilon, delta, gamma, n_blocks, block_interval_millisecond, elephants_dir, mice_dir, mice_ratio, mean_pipelines_per_block, initial_blocks, output_blocks, output_claims)
 
 	if profile != "" {
 		fmt.Println("Saving the profiles.")
@@ -115,7 +119,7 @@ func downloadFile(filepath string, url string) error {
 	return err
 }
 
-func run_exponential(mode string, DPF_T int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
+func run_exponential(scheduler, mode string, DPF_T int, release_steps_per_scheduling_period int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
 	rdp := gamma >= 0
 	s := stub.NewStub()
 
@@ -123,7 +127,7 @@ func run_exponential(mode string, DPF_T int, dpf_release_period_block float64, D
 	switch mode {
 
 	case "N":
-		s.StartN(timeout, DPF_N)
+		s.StartN(timeout, DPF_N, scheduler_method)
 	case "T":
 		dpf_release_period_millisecond := 0
 		if dpf_release_period_block <= 0 {
@@ -132,8 +136,10 @@ func run_exponential(mode string, DPF_T int, dpf_release_period_block float64, D
 		} else {
 			dpf_release_period_millisecond = int(dpf_release_period_block * float64(block_interval_millisecond))
 		}
-
-		s.StartT(timeout, DPF_T, dpf_release_period_millisecond)
+		if release_steps_per_scheduling_period <= 0 {
+			release_steps_per_scheduling_period = 1
+		}
+		s.StartT(timeout, DPF_T, dpf_release_period_millisecond, release_steps_per_scheduling_period, scheduler_method)
 	default:
 		log.Fatal("Invalid DPF mode", mode)
 	}

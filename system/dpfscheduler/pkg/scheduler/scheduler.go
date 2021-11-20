@@ -34,6 +34,9 @@ const (
 	// mode
 	NScheme = 0
 	TScheme = 1
+
+	Dpf           = "DPF"
+	FlatRelevance = "FLAT_RELEVANCE"
 )
 
 type DpfScheduler struct {
@@ -85,12 +88,20 @@ type DpfScheduler struct {
 	// N or T scheme
 	mode int
 
+	scheduler string
+
 	// default releasing period for DPN-T policy. Unit is ms.
 	// How frequent should the scheduler release budget
 	defaultReleasingPeriod int64
+
+	defaultReleaseStepsPerSchedulingPeriod int
 }
 
 type DpfSchedulerOption struct {
+
+	// Scheduler
+	Scheduler string
+
 	// Scheduling Policy
 	Mode int
 
@@ -106,6 +117,8 @@ type DpfSchedulerOption struct {
 	// default releasing period for DPN-T policy. Unit is ms.
 	DefaultReleasingDuration int64
 
+	DefaultReleaseStepsPerSchedulingPeriod int
+
 	// Optional: configuration for the streaming counter
 	// E.g. budget for the Laplace mechanism used by the counter (will be converted to RDP if necessary)
 	StreamingCounterOptions *schedulercache.StreamingCounterOptions
@@ -113,6 +126,7 @@ type DpfSchedulerOption struct {
 
 func DefaultNSchemeOption() DpfSchedulerOption {
 	return DpfSchedulerOption{
+		Scheduler:      Dpf,
 		Mode:           NScheme,
 		N:              100,
 		DefaultTimeout: 20000,
@@ -121,10 +135,12 @@ func DefaultNSchemeOption() DpfSchedulerOption {
 
 func DefaultTSchemeOption() DpfSchedulerOption {
 	return DpfSchedulerOption{
-		Mode:                     TScheme,
-		DefaultTimeout:           20000,
-		DefaultReleasingPeriod:   10000,
-		DefaultReleasingDuration: 30000,
+		Scheduler:                              Dpf,
+		Mode:                                   TScheme,
+		DefaultTimeout:                         20000,
+		DefaultReleasingPeriod:                 10000,
+		DefaultReleasingDuration:               30000,
+		DefaultReleaseStepsPerSchedulingPeriod: 1,
 	}
 }
 
@@ -156,19 +172,21 @@ func New(privacyResourceClient privacyclientset.Interface,
 	scheduler.timer = timing.MakeDefaultTimer()
 	scheduler.schedulingQueue = queue.NewSchedulingQueue(scheduler.timer.Now(), option.DefaultTimeout)
 	scheduler.updater = updater.NewResourceUpdater(privacyResourceClient, schedulerCache)
+	scheduler.scheduler = option.Scheduler
 
 	scheduler.allocChan = make(chan string, 16)
 
 	if option.Mode == TScheme {
-		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan)
+		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan, scheduler.scheduler)
 		releaseOption := flowreleasing.ReleaseOption{
 			DefaultDuration: option.DefaultReleasingDuration,
 		}
 		scheduler.flowController = flowreleasing.MakeController(schedulerCache, scheduler.updater, scheduler.timer, releaseOption)
 		scheduler.mode = TScheme
 		scheduler.defaultReleasingPeriod = option.DefaultReleasingPeriod
+		scheduler.defaultReleaseStepsPerSchedulingPeriod = option.DefaultReleaseStepsPerSchedulingPeriod
 	} else {
-		scheduler.batch = algorithm.NewDpfNSchemeBatch(option.N, *scheduler.updater, schedulerCache, scheduler.allocChan)
+		scheduler.batch = algorithm.NewDpfNSchemeBatch(option.N, *scheduler.updater, schedulerCache, scheduler.allocChan, scheduler.scheduler)
 		scheduler.mode = NScheme
 	}
 
@@ -199,7 +217,12 @@ func (dpfScheduler *DpfScheduler) Run(ctx context.Context) {
 	go dpfScheduler.channelHandler()
 
 	if dpfScheduler.mode == TScheme {
-		go wait.UntilWithContext(ctx, dpfScheduler.flowReleaseAndAllocate, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
+		if dpfScheduler.defaultReleaseStepsPerSchedulingPeriod == 1 {
+			go wait.UntilWithContext(ctx, dpfScheduler.flowReleaseAndAllocate, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
+		} else {
+			go wait.UntilWithContext(ctx, dpfScheduler.flowRelease, time.Duration(dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
+			go wait.UntilWithContext(ctx, dpfScheduler.Allocate, time.Duration(int64(dpfScheduler.defaultReleaseStepsPerSchedulingPeriod)*dpfScheduler.defaultReleasingPeriod)*time.Millisecond)
+		}
 	}
 
 	go wait.UntilWithContext(ctx, dpfScheduler.checkTimeout, queue.BucketSize*time.Millisecond)
@@ -405,5 +428,20 @@ func (dpfScheduler *DpfScheduler) flowReleaseAndAllocate(ctx context.Context) {
 	defer dpfScheduler.batch.Unlock()
 
 	blockStates := dpfScheduler.flowController.Release()
+	dpfScheduler.batch.AllocateAvailableBudgets(blockStates)
+}
+
+func (dpfScheduler *DpfScheduler) flowRelease(ctx context.Context) {
+	dpfScheduler.batch.Lock()
+	defer dpfScheduler.batch.Unlock()
+
+	dpfScheduler.flowController.Release()
+}
+
+func (dpfScheduler *DpfScheduler) Allocate(ctx context.Context) {
+	dpfScheduler.batch.Lock()
+	defer dpfScheduler.batch.Unlock()
+
+	blockStates := dpfScheduler.flowController.GetAvailableBlocks()
 	dpfScheduler.batch.AllocateAvailableBudgets(blockStates)
 }

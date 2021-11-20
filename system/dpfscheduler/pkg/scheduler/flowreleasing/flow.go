@@ -52,6 +52,16 @@ func (controller *Controller) Release() []*schedulercache.BlockState {
 	return releasedBlocks
 }
 
+func (controller *Controller) GetAvailableBlocks() []*schedulercache.BlockState {
+	availableBlocks := make([]*schedulercache.BlockState, 0, 16)
+	for _, blockState := range controller.cache.AllBlocks() {
+		if !blockState.View().Status.AvailableBudget.IsEmpty() {
+			availableBlocks = append(availableBlocks, blockState)
+		}
+	}
+	return availableBlocks
+}
+
 // return value indicates whether the data block has been updated
 func (controller *Controller) releaseLatestBudget(block *columbiav1.PrivateDataBlock) error {
 	if block.Spec.FlowReleasingOption == nil || block.Spec.FlowReleasingOption.StartTime == 0 {

@@ -12,6 +12,7 @@ import (
 type DemandState struct {
 	Availability bool
 	Share        float64
+	Cost         float64
 	IsValid      bool
 }
 
@@ -46,13 +47,37 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	initialBudget := blockState.block.Spec.InitialBudget
 	availableBudget := blockState.block.Status.AvailableBudget
 
-	share := getDominantShare(budget, initialBudget)
+	share := 0.0
+	blockCost := 0.0
+	//if util.IsDPF() {
+	share = getDominantShare(budget, initialBudget)
+	//blockCost = 0
+	//} else {
+	//	share = 0
+	blockCost = getPerBlockCost(budget, initialBudget)
+	//}
 
 	return &DemandState{
 		Availability: availableBudget.HasEnough(budget),
 		Share:        share,
+		Cost:         blockCost,
 		IsValid:      true,
 	}
+}
+
+func getPerBlockCost(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBudget) float64 {
+	budget.ToRenyi()
+	base.ToRenyi()
+	return getPerBlockCostRenyi(budget.Renyi, base.Renyi)
+}
+
+func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
+	var blockCost float64
+	b, c := columbiav1.ReduceToSameSupport(budget, base)
+	for i := range b {
+		blockCost += b[i].Epsilon / c[i].Epsilon
+	}
+	return blockCost
 }
 
 func getDominantShare(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBudget) float64 {
@@ -107,6 +132,7 @@ func oldgetRenyiDominantShare(budget columbiav1.RenyiBudget, base columbiav1.Ren
 }
 
 // UpdateDemandMap updates the demand for each claim on this block
+// - cost
 // - dominant share
 // - availability (enough eps/delta budget, or one alpha positive)
 // - valid
