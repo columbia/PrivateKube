@@ -72,10 +72,13 @@ func getPerBlockCost(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBud
 }
 
 func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
-	var blockCost float64
+	blockCost := 0.0
 	b, c := columbiav1.ReduceToSameSupport(budget, base)
 	for i := range b {
-		blockCost += b[i].Epsilon / c[i].Epsilon
+		remaining := c[i].Epsilon - b[i].Epsilon
+		if remaining > 0 {
+			blockCost += b[i].Epsilon / remaining
+		}
 	}
 	return blockCost
 }
