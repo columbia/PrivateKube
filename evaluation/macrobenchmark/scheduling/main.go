@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -120,6 +121,9 @@ func downloadFile(filepath string, url string) error {
 }
 
 func run_exponential(scheduler, mode string, DPF_T int, release_steps_per_scheduling_period int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
+
+	r := rand.New(rand.NewSource(99))
+
 	rdp := gamma >= 0
 	s := stub.NewStub()
 
@@ -151,6 +155,7 @@ func run_exponential(scheduler, mode string, DPF_T int, release_steps_per_schedu
 		BlockGen:              b,
 		MeanPipelinesPerBlock: mean_pipelines_per_block,
 		Pipelines:             &m,
+		Rand:                  r,
 	}
 	// Collect the objects' names for future analysis
 	block_names := make(chan string, b.MaxBlocks)
