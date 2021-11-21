@@ -39,12 +39,11 @@ func (s *Stub) StartN(timeout time.Duration, N int, scheduler_method string) {
 	s.PrivacyScheduler = startScheduler(s.Client, option)
 }
 
-func (s *Stub) StartT(timeout time.Duration, DPF_T int, dpf_release_period_millisecond int, release_steps_per_scheduling_period int, scheduler_method string) {
+func (s *Stub) StartT(timeout time.Duration, DPF_T int, dpf_release_period_millisecond int, scheduler_method string) {
 	option := scheduler.DefaultTSchemeOption()
 	option.DefaultTimeout = int64(timeout / time.Millisecond)
 	option.DefaultReleasingPeriod = int64(dpf_release_period_millisecond)
 	option.DefaultReleasingDuration = int64(DPF_T) * int64(dpf_release_period_millisecond)
-	option.DefaultReleaseStepsPerSchedulingPeriod = release_steps_per_scheduling_period
 	option.Scheduler = scheduler_method
 	fmt.Println("Starting DPF-T scheduler:\n", option)
 	s.PrivacyScheduler = startScheduler(s.Client, option)
