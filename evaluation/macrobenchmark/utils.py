@@ -219,7 +219,7 @@ def load_block_claims(log_claims, log_blocks, failure_ratio=0.05):
     block_index = []
     arrival = []
     delay = []
-    priority = None
+    priority = []
     empty_claims = 0
     for c in claims:
         try:
@@ -274,7 +274,9 @@ def load_block_claims(log_claims, log_blocks, failure_ratio=0.05):
                 )
                 / block_interval
             )
-            priority = c["spec"]["priority"]
+            priority.append(
+                    c["spec"]["priority"]
+            )
         except KeyError:
             empty_claims += 1
 

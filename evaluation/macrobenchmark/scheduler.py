@@ -186,7 +186,12 @@ def run_config(
         config["fraction_allocated_pipelines"] = config["n_allocated_pipelines"] / len(
             claims_df
         )
-        config["realized_profit"] = claims_df["success"]['priority']
+        total_profit = 0
+        for _, claim in claims_df.iterrows():
+
+            if claim["success"] == True:
+                total_profit += claim["priority"]
+        config["realized_profit"] = total_profit
         mice_path = config["mice"]
         if "/user-time/" in mice_path:
             semantic = "user-time"
