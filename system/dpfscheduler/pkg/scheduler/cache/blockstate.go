@@ -54,7 +54,7 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	//blockCost = 0
 	//} else {
 	//	share = 0
-	blockCost = getPerBlockCost(budget, initialBudget)
+	blockCost = getPerBlockCost(budget, availableBudget)
 	//}
 
 	return &DemandState{
@@ -65,17 +65,17 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	}
 }
 
-func getPerBlockCost(budget columbiav1.PrivacyBudget, base columbiav1.PrivacyBudget) float64 {
+func getPerBlockCost(budget columbiav1.PrivacyBudget, availableBudget columbiav1.PrivacyBudget) float64 {
 	budget.ToRenyi()
-	base.ToRenyi()
-	return getPerBlockCostRenyi(budget.Renyi, base.Renyi)
+	availableBudget.ToRenyi()
+	return getPerBlockCostRenyi(budget.Renyi, availableBudget.Renyi)
 }
 
-func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, base columbiav1.RenyiBudget) float64 {
+func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, availableBudget columbiav1.RenyiBudget) float64 {
 	blockCost := 0.0
-	b, c := columbiav1.ReduceToSameSupport(budget, base)
+	b, a := columbiav1.ReduceToSameSupport(budget, availableBudget)
 	for i := range b {
-		remaining := c[i].Epsilon - b[i].Epsilon
+		remaining := a[i].Epsilon //c[i].Epsilon - b[i].Epsilon
 		if remaining > 0 {
 			blockCost += b[i].Epsilon / remaining
 		}

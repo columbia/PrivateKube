@@ -283,18 +283,23 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 				continue
 			}
 
-			if dpf.scheduler == util.DPF {
-				if shareInfo.DominantShare < minVal {
-					minVal = shareInfo.DominantShare
-					minShareClaim = dpf.cache.GetClaim(claimId)
-					minShareInfo = shareInfo
-				}
-			} else {
-				if shareInfo.Cost < minVal {
-					minVal = shareInfo.Cost
-					minShareClaim = dpf.cache.GetClaim(claimId)
-					minShareInfo = shareInfo
-				}
+			//if dpf.scheduler == util.DPF {
+			//	if shareInfo.DominantShare < minVal {
+			//		minVal = shareInfo.DominantShare
+			//		minShareClaim = dpf.cache.GetClaim(claimId)
+			//		minShareInfo = shareInfo
+			//	}
+			//} else {
+			//	if shareInfo.Cost < minVal {
+			//		minVal = shareInfo.Cost
+			//		minShareClaim = dpf.cache.GetClaim(claimId)
+			//		minShareInfo = shareInfo
+			//	}
+			//}
+			if (1 / shareInfo.Efficiency) < minVal {
+				minVal = shareInfo.Efficiency
+				minShareClaim = dpf.cache.GetClaim(claimId)
+				minShareInfo = shareInfo
 			}
 		}
 

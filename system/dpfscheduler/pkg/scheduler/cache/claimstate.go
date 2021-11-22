@@ -23,6 +23,7 @@ type ClaimState struct {
 // be converted reserved budget
 type ShareInfo struct {
 	Cost              float64
+	Efficiency        float64
 	DominantShare     float64
 	AvailableBlocks   []string
 	IsReadyToAllocate bool
@@ -70,6 +71,7 @@ func (claimState *ClaimState) UpdateTotalCost() (result ShareInfo) {
 	// maxN is the max number of blocks
 	// minN is the min number of blocks
 	pendingRequest := claimState.claim.Spec.Requests[claimState.nextIndex].AllocateRequest
+	priority := claimState.claim.Spec.Priority
 	maxN := pendingRequest.MaxNumberOfBlocks
 
 	if maxN == 0 {
@@ -104,6 +106,7 @@ func (claimState *ClaimState) UpdateTotalCost() (result ShareInfo) {
 		result.Cost += pair.cost
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
+	result.Efficiency = (float64(priority) / 10) / result.Cost
 
 	return
 }
@@ -119,6 +122,8 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 	// maxN is the max number of blocks
 	// minN is the min number of blocks
 	pendingRequest := claimState.claim.Spec.Requests[claimState.nextIndex].AllocateRequest
+	priority := claimState.claim.Spec.Priority
+
 	maxN := pendingRequest.MaxNumberOfBlocks
 
 	if maxN == 0 {
@@ -149,9 +154,11 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 	}
 
 	result.DominantShare = 0
+	result.Efficiency = 0
 	result.AvailableBlocks = make([]string, 0, maxN)
 	for _, pair := range pairs[:maxN] {
 		result.DominantShare = math.Max(result.DominantShare, pair.share)
+		result.Efficiency = math.Max(result.Efficiency, pair.share/(float64(priority)/10))
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
 
