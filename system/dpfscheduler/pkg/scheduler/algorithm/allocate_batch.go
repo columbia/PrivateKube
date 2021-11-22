@@ -298,7 +298,7 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 			//}
 
 			val_ = 0.0
-			if shareInfo.Efficiency < val_ {
+			if shareInfo.Efficiency > val_ {
 				val_ = shareInfo.Efficiency
 				shareClaim_ = dpf.cache.GetClaim(claimId)
 				shareInfo_ = shareInfo
