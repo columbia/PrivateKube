@@ -119,6 +119,34 @@ func (g *ClaimGenerator) Run() {
 	}()
 }
 
+func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, task_interval time.Duration) {
+	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
+	end_time := g.BlockGen.StartTime.Add(total_duration)
+	total_tasks := int(g.MeanPipelinesPerBlock) * g.BlockGen.MaxBlocks
+
+	index := 0
+	ticker := time.NewTicker(task_interval)
+	for index < total_tasks {
+		<-ticker.C
+		block_index := g.BlockGen.CurrentIndex()
+		// Cap the timeout by the simulation running time (with a five-block margin)
+		timeout := time.Until(end_time) + 5*g.BlockGen.BlockInterval
+		if timeout > default_timeout {
+			timeout = default_timeout
+		}
+		go func(int, time.Duration) {
+			pipeline := g.Pipelines.SampleOne(g.Rand)
+			claim, err := g.createClaim(block_index, pipeline, timeout)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				claim_names <- claim.ObjectMeta.Name
+			}
+		}(block_index, timeout)
+		index++
+	}
+}
+
 func (g *ClaimGenerator) RunExponential(claim_names chan string, default_timeout time.Duration) {
 	// NOTE: we can try other start/stop strategies
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval

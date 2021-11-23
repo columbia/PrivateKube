@@ -119,7 +119,7 @@ func downloadFile(filepath string, url string) error {
 	return err
 }
 
-func run_exponential(scheduler, mode string, DPF_T int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
+func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
 
 	r := rand.New(rand.NewSource(99))
 
@@ -127,6 +127,7 @@ func run_exponential(scheduler, mode string, DPF_T int, dpf_release_period_block
 	s := stub.NewStub()
 
 	timeout := time.Duration(pipeline_timeout_blocks*block_interval_millisecond) * time.Millisecond
+	task_interval_millisecond := float64(block_interval_millisecond) / mean_pipelines_per_block
 	switch mode {
 
 	case "N":
@@ -161,7 +162,7 @@ func run_exponential(scheduler, mode string, DPF_T int, dpf_release_period_block
 	go b.RunLog(block_names)
 	// Wait a bit before sending pipelines
 	time.Sleep(time.Duration(initial_blocks) * b.BlockInterval)
-	g.RunExponential(claim_names, timeout)
+	g.RunConstant(claim_names, timeout, time.Duration(task_interval_millisecond)*time.Millisecond)
 
 	fmt.Println("Waiting for the last pipelines to timeout")
 	time.Sleep(10 * b.BlockInterval)
