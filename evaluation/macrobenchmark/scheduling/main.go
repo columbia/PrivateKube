@@ -162,7 +162,7 @@ func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_perio
 	go b.RunLog(block_names)
 	// Wait a bit before sending pipelines
 	time.Sleep(time.Duration(initial_blocks) * b.BlockInterval)
-	g.RunConstant(claim_names, timeout, time.Duration(task_interval_millisecond)*time.Millisecond)
+	g.RunExponentialDeterministic(claim_names, timeout, time.Duration(task_interval_millisecond)*time.Millisecond)
 
 	fmt.Println("Waiting for the last pipelines to timeout")
 	time.Sleep(10 * b.BlockInterval)

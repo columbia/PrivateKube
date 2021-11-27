@@ -104,9 +104,12 @@ func (claimState *ClaimState) UpdateTotalCost() (result ShareInfo) {
 	result.AvailableBlocks = make([]string, 0, maxN)
 	for _, pair := range pairs[:maxN] {
 		result.Cost += pair.cost
+		if result.Cost <= 0 {
+			result.Cost = math.Inf(1)
+		}
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
-	result.Efficiency = (float64(priority) / 10) / result.Cost
+	result.Efficiency = float64(priority) / result.Cost
 
 	return
 }
@@ -158,7 +161,7 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 	result.AvailableBlocks = make([]string, 0, maxN)
 	for _, pair := range pairs[:maxN] {
 		//result.DominantShare = math.Max(result.DominantShare, pair.share)
-		result.Efficiency = math.Max(result.Efficiency, pair.share/(float64(priority)/10))
+		result.Efficiency = math.Min(result.Efficiency, pair.share/float64(priority))
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
 

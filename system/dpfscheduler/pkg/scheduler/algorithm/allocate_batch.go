@@ -252,7 +252,6 @@ func (dpf *DpfBatch) updateAffectedClaims(claimShareMap map[string]cache.ShareIn
 		} else {
 			shareInfo = claimState.UpdateTotalCost()
 		}
-		//shareInfo := claimState.UpdateDominantShare()
 		if shareInfo.IsReadyToAllocate {
 			claimShareMap[claimId] = shareInfo
 		} else {

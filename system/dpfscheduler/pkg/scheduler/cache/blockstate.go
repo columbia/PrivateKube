@@ -43,7 +43,7 @@ func (blockState *BlockState) GetReservedMap() map[string]columbiav1.PrivacyBudg
 	return reservedMap
 }
 
-func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget) *DemandState {
+func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget, overflow_a map[float64]float64) *DemandState {
 	initialBudget := blockState.block.Spec.InitialBudget
 	availableBudget := blockState.block.Status.AvailableBudget
 
@@ -54,7 +54,7 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	//blockCost = 0
 	//} else {
 	//	share = 0
-	blockCost = getPerBlockCost(budget, availableBudget)
+	blockCost = getPerBlockCost(budget, availableBudget, overflow_a)
 	//}
 
 	return &DemandState{
@@ -65,19 +65,22 @@ func (blockState *BlockState) computeDemandState(budget columbiav1.PrivacyBudget
 	}
 }
 
-func getPerBlockCost(budget columbiav1.PrivacyBudget, availableBudget columbiav1.PrivacyBudget) float64 {
+func getPerBlockCost(budget columbiav1.PrivacyBudget, availableBudget columbiav1.PrivacyBudget, overflow_a map[float64]float64) float64 {
 	budget.ToRenyi()
 	availableBudget.ToRenyi()
-	return getPerBlockCostRenyi(budget.Renyi, availableBudget.Renyi)
+	return getPerBlockCostRenyi(budget.Renyi, availableBudget.Renyi, overflow_a)
 }
 
-func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, availableBudget columbiav1.RenyiBudget) float64 {
+func getPerBlockCostRenyi(budget columbiav1.RenyiBudget, availableBudget columbiav1.RenyiBudget, overflow_a map[float64]float64) float64 {
 	blockCost := 0.0
-	b, a := columbiav1.ReduceToSameSupport(budget, availableBudget)
+	b, _ := columbiav1.ReduceToSameSupport(budget, availableBudget)
 	for i := range b {
-		remaining := a[i].Epsilon //c[i].Epsilon - b[i].Epsilon
-		if remaining > 0 {
-			blockCost += b[i].Epsilon / remaining
+		overflow := overflow_a[b[i].Alpha] //a[i].Epsilon
+		if overflow > 0 {
+			blockCost += b[i].Epsilon / overflow
+		} else {
+			blockCost = 0
+			break
 		}
 	}
 	return blockCost
@@ -134,18 +137,43 @@ func oldgetRenyiDominantShare(budget columbiav1.RenyiBudget, base columbiav1.Ren
 	return share
 }
 
+func (blockState *BlockState) compute_block_overflow() map[float64]float64 {
+	blockState.RLock()
+	defer blockState.Unlock()
+
+	overflow_a := map[float64]float64{}
+
+	for _, reservedBudget := range blockState.block.Status.ReservedBudgetMap {
+		reservedBudget.ToRenyi()
+		blockState.block.Status.AvailableBudget.ToRenyi()
+		r, a := columbiav1.ReduceToSameSupport(reservedBudget.Renyi, blockState.block.Status.AvailableBudget.Renyi)
+		for i := range r {
+			alpha := r[i].Alpha
+			if _, ok := overflow_a[alpha]; !ok {
+				overflow_a[alpha] = -a[i].Epsilon
+			}
+			overflow_a[alpha] += r[i].Epsilon
+		}
+	}
+	return overflow_a
+}
+
 // UpdateDemandMap updates the demand for each claim on this block
 // - cost
 // - dominant share
 // - availability (enough eps/delta budget, or one alpha positive)
 // - valid
+
 func (blockState *BlockState) UpdateDemandMap() map[string]*DemandState {
 	blockState.Lock()
 	defer blockState.Unlock()
 
+	var overflow_a map[float64]float64
+	overflow_a = blockState.compute_block_overflow()
+
 	demandMap := map[string]*DemandState{}
 	for claimId, reservedBudget := range blockState.block.Status.ReservedBudgetMap {
-		demand := blockState.computeDemandState(reservedBudget)
+		demand := blockState.computeDemandState(reservedBudget, overflow_a)
 		demandMap[claimId] = demand
 	}
 
