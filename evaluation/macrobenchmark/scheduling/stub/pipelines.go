@@ -9,6 +9,7 @@ type Pipeline struct {
 	Name    string
 	Demand  columbiav1.PrivacyBudget
 	NBlocks int
+	Epsilon float64
 }
 
 func NewPipeline(name string, p RawPipeline, rdp bool) Pipeline {
@@ -37,6 +38,7 @@ func NewPipeline(name string, p RawPipeline, rdp bool) Pipeline {
 		Name:    name,
 		Demand:  demand,
 		NBlocks: p.NBlocks / RAW_BLOCKS_MULTIPLIER,
+		Epsilon: p.Epsilon,
 	}
 }
 

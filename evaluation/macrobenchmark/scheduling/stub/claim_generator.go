@@ -48,9 +48,11 @@ func MakeSampler(rdp bool, mice_ratio float64, mice_path string, elephants_path 
 func (p MiceElphantsSampler) SampleOne(r *rand.Rand) Pipeline {
 	if r.Float64() < p.MiceRatio {
 		i := r.Intn(len(p.Mice))
+		fmt.Println("Sample one mice: %d\n", i)
 		return p.Mice[i]
 	}
 	i := r.Intn(len(p.Elephants))
+	fmt.Println("Sample one elephants: %d\n", i)
 	return p.Elephants[i]
 }
 
@@ -68,7 +70,7 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 			Annotations: annotations,
 		},
 		Spec: columbiav1.PrivacyBudgetClaimSpec{
-			Priority: int32(g.Rand.Intn(10) + 1),
+			Priority: model.Epsilon * model.NBlocks / 100,
 			Requests: []columbiav1.Request{
 				{
 					Identifier: "1",
@@ -87,8 +89,8 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 							},
 						},
 
-						MinNumberOfBlocks: model.NBlocks,
-						MaxNumberOfBlocks: model.NBlocks,
+						MinNumberOfBlocks: model.NBlocks / 100,
+						MaxNumberOfBlocks: model.NBlocks / 100,
 						ExpectedBudget: columbiav1.BudgetRequest{
 							Constant: &model.Demand,
 						},
