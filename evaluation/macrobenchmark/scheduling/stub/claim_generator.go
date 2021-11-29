@@ -70,7 +70,7 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 			Annotations: annotations,
 		},
 		Spec: columbiav1.PrivacyBudgetClaimSpec{
-			Priority: int32(100*model.Epsilon) * int32(model.NBlocks),
+			Priority: int32(1000*model.Epsilon) * int32(model.NBlocks),
 			Requests: []columbiav1.Request{
 				{
 					Identifier: "1",
@@ -124,7 +124,7 @@ func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, de
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	total_tasks := int(g.MeanPipelinesPerBlock) * g.BlockGen.MaxBlocks
-	r := rand.New(rand.NewSource(99))
+	r := rand.New(rand.NewSource(0))
 
 	index := 0
 
