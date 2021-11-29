@@ -138,9 +138,6 @@ func oldgetRenyiDominantShare(budget columbiav1.RenyiBudget, base columbiav1.Ren
 }
 
 func (blockState *BlockState) compute_block_overflow() map[float64]float64 {
-	blockState.RLock()
-	defer blockState.Unlock()
-
 	overflow_a := map[float64]float64{}
 
 	for _, reservedBudget := range blockState.block.Status.ReservedBudgetMap {

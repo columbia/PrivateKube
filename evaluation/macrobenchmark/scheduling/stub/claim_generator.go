@@ -70,7 +70,7 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 			Annotations: annotations,
 		},
 		Spec: columbiav1.PrivacyBudgetClaimSpec{
-			Priority: int32(100*model.Epsilon) * int32((model.NBlocks / 100)),
+			Priority: int32(100*model.Epsilon) * int32(model.NBlocks),
 			Requests: []columbiav1.Request{
 				{
 					Identifier: "1",
@@ -89,8 +89,8 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 							},
 						},
 
-						MinNumberOfBlocks: model.NBlocks / 100,
-						MaxNumberOfBlocks: model.NBlocks / 100,
+						MinNumberOfBlocks: model.NBlocks,
+						MaxNumberOfBlocks: model.NBlocks,
 						ExpectedBudget: columbiav1.BudgetRequest{
 							Constant: &model.Demand,
 						},
@@ -124,6 +124,7 @@ func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, de
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	total_tasks := int(g.MeanPipelinesPerBlock) * g.BlockGen.MaxBlocks
+	r := rand.New(rand.NewSource(99))
 
 	index := 0
 
@@ -139,15 +140,16 @@ func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, de
 		if timeout > default_timeout {
 			timeout = default_timeout
 		}
-		go func(int, time.Duration) {
-			pipeline := g.Pipelines.SampleOne(g.Rand)
+		go func(int, time.Duration, *rand.Rand) {
+
+			pipeline := g.Pipelines.SampleOne(r)
 			claim, err := g.createClaim(block_index, pipeline, timeout)
 			if err != nil {
 				log.Fatal(err)
 			} else {
 				claim_names <- claim.ObjectMeta.Name
 			}
-		}(block_index, timeout)
+		}(block_index, timeout, r)
 		index++
 	}
 }
