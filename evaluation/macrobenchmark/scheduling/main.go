@@ -126,7 +126,7 @@ func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_perio
 	s := stub.NewStub()
 
 	timeout := time.Duration(pipeline_timeout_blocks*block_interval_millisecond) * time.Millisecond
-	task_interval_millisecond := float64(block_interval_millisecond) / mean_pipelines_per_block
+	task_interval_millisecond := time.Duration(float64(block_interval_millisecond) / mean_pipelines_per_block)
 	switch mode {
 
 	case "N":

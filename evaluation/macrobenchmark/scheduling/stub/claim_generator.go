@@ -157,7 +157,7 @@ func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, de
 }
 
 //
-func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, n_blocks int32, task_interval time.Duration) {
+func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, n_blocks int, task_interval time.Duration) {
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	total_tasks := int(g.MeanPipelinesPerBlock) * int(n_blocks)
