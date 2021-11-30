@@ -161,7 +161,7 @@ func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout ti
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	total_tasks := int(g.MeanPipelinesPerBlock) * int(n_blocks)
-	task_interval = time.Duration(float64(g.BlockGen.BlockInterval.Microseconds()) / g.MeanPipelinesPerBlock)
+	//task_interval = time.Duration(float64(g.BlockGen.BlockInterval.Microseconds()) / g.MeanPipelinesPerBlock)
 	fmt.Println("task interval\n\n\n\n", task_interval)
 
 	index := 0
