@@ -157,11 +157,11 @@ func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, de
 }
 
 //
-func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, n_blocks int) {
+func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, n_blocks int, task_interval time.Duration) {
 	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	total_tasks := int(g.MeanPipelinesPerBlock) * int(n_blocks)
-	task_interval := time.Duration(float64(g.BlockGen.BlockInterval.Microseconds()) / g.MeanPipelinesPerBlock)
+	//task_interval := time.Duration(float64(g.BlockGen.BlockInterval.Microseconds()) / g.MeanPipelinesPerBlock)
 
 	index := 0
 	ticker := time.NewTicker(task_interval)
