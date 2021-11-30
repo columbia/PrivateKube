@@ -415,6 +415,7 @@ func (dpfScheduler *DpfScheduler) checkTimeout(ctx context.Context) {
 func (dpfScheduler *DpfScheduler) flowReleaseAndAllocate(ctx context.Context) {
 	dpfScheduler.batch.Lock()
 	defer dpfScheduler.batch.Unlock()
+	klog.Infof("\n\n\nReleasing Budget\n\n\n")
 
 	blockStates := dpfScheduler.flowController.Release()
 	dpfScheduler.batch.AllocateAvailableBudgets(blockStates)

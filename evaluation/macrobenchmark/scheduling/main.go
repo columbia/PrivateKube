@@ -84,7 +84,6 @@ func main() {
 		// Default setting to drop the meaningless RDP orders.
 		gamma = 0.05
 	}
-
 	run_exponential(scheduler_method, mode, DPF_T, dpf_release_period_block, DPF_N, pipeline_timeout_blocks, epsilon, delta, gamma, n_blocks, block_interval_millisecond, elephants_dir, mice_dir, mice_ratio, mean_pipelines_per_block, initial_blocks, output_blocks, output_claims)
 
 	if profile != "" {
@@ -140,6 +139,9 @@ func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_perio
 		} else {
 			dpf_release_period_millisecond = int(dpf_release_period_block * float64(block_interval_millisecond))
 		}
+		fmt.Println("release time\n\n\n", dpf_release_period_block)
+		fmt.Println("dpf_release_period_milliseconde\n\n\n", dpf_release_period_millisecond)
+
 		s.StartT(timeout, DPF_T, dpf_release_period_millisecond, scheduler_method)
 	default:
 		log.Fatal("Invalid DPF mode", mode)
@@ -162,7 +164,8 @@ func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_perio
 	go b.RunLog(block_names)
 	// Wait a bit before sending pipelines
 	time.Sleep(time.Duration(initial_blocks) * b.BlockInterval)
-	g.RunExponentialDeterministic(claim_names, timeout, time.Duration(task_interval_millisecond)*time.Millisecond)
+	//g.RunExponentialDeterministic(claim_names, timeout, n_blocks)
+	g.RunConstant(claim_names, timeout, n_blocks, task_interval_millisecond)
 
 	fmt.Println("Waiting for the last pipelines to timeout")
 	time.Sleep(10 * b.BlockInterval)
