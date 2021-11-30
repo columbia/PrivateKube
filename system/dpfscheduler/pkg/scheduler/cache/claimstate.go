@@ -27,6 +27,7 @@ type ShareInfo struct {
 	DominantShare     float64
 	AvailableBlocks   []string
 	IsReadyToAllocate bool
+	Profit            int32
 }
 
 func NewClaimState(claim *columbiav1.PrivacyBudgetClaim) *ClaimState {
@@ -110,7 +111,7 @@ func (claimState *ClaimState) UpdateTotalCost() (result ShareInfo) {
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
 	result.Efficiency = float64(priority) / result.Cost
-
+	result.Profit = priority
 	return
 }
 
@@ -161,9 +162,11 @@ func (claimState *ClaimState) UpdateDominantShare() (result ShareInfo) {
 	result.AvailableBlocks = make([]string, 0, maxN)
 	for _, pair := range pairs[:maxN] {
 		//result.DominantShare = math.Max(result.DominantShare, pair.share)
-		result.Efficiency = math.Min(result.Efficiency, pair.share/float64(priority))
+		result.Efficiency = math.Max(result.Efficiency, pair.share/float64(priority))
 		result.AvailableBlocks = append(result.AvailableBlocks, pair.blockId)
 	}
+	result.Efficiency = 1 / result.Efficiency
+	result.Profit = priority
 
 	return
 }

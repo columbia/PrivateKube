@@ -311,6 +311,7 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 		// Pop the smallest claim, since we are going to allocate it
 		// They will be tried in next iteration when more budget becomes available.
 		delete(claimShareMap, shareClaim_.GetId())
+		klog.Infof("Allocating [%s]", shareClaim_.GetId(), " - Profit: [%d]", shareInfo_.Profit)
 
 		klog.Infof("ready to convert pending budget to acquired budget of claim [%s]", shareClaim_.GetId())
 		if dpf.BatchAllocateP2(shareClaim_, shareInfo_.AvailableBlocks) {
