@@ -191,7 +191,7 @@ def run_config(
 
             if claim["success"] == True:
                 total_profit += claim["priority"]
-        config["realized_profit"] = total_profit
+#         config["realized_profit"] = total_profit
         mice_path = config["mice"]
         if "/user-time/" in mice_path:
             semantic = "user-time"

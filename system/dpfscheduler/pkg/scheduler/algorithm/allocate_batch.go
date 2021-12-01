@@ -282,26 +282,26 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 				continue
 			}
 
-			//if dpf.scheduler == util.DPF {
-			//	if shareInfo.DominantShare < val_ {
-			//		val_ = shareInfo.DominantShare
-			//		shareClaim_ = dpf.cache.GetClaim(claimId)
-			//		shareInfo_ = shareInfo
-			//	}
-			//} else {
-			//	if shareInfo.Cost < val_ {
-			//		val_ = shareInfo.Cost
-			//		shareClaim_ = dpf.cache.GetClaim(claimId)
-			//		shareInfo_ = shareInfo
-			//	}
-			//}
-
-			val_ = 0.0
-			if shareInfo.Efficiency > val_ {
-				val_ = shareInfo.Efficiency
-				shareClaim_ = dpf.cache.GetClaim(claimId)
-				shareInfo_ = shareInfo
+			if dpf.scheduler == util.DPF {
+				if shareInfo.DominantShare < val_ {
+					val_ = shareInfo.DominantShare
+					shareClaim_ = dpf.cache.GetClaim(claimId)
+					shareInfo_ = shareInfo
+				}
+			} else {
+				if shareInfo.Cost < val_ {
+					val_ = shareInfo.Cost
+					shareClaim_ = dpf.cache.GetClaim(claimId)
+					shareInfo_ = shareInfo
+				}
 			}
+
+			//val_ = 0.0
+			//if shareInfo.Efficiency > val_ {
+			//	val_ = shareInfo.Efficiency
+			//	shareClaim_ = dpf.cache.GetClaim(claimId)
+			//	shareInfo_ = shareInfo
+			//}
 		}
 
 		if shareClaim_ == nil {
@@ -311,7 +311,7 @@ func (dpf *DpfBatch) AllocateAvailableBudgets(blockStates []*cache.BlockState) {
 		// Pop the smallest claim, since we are going to allocate it
 		// They will be tried in next iteration when more budget becomes available.
 		delete(claimShareMap, shareClaim_.GetId())
-		klog.Infof("Allocating [%s]", shareClaim_.GetId(), " - Profit: [%d]", shareInfo_.Profit)
+		klog.Infof("Allocating [%s]", shareClaim_.GetId())
 
 		klog.Infof("ready to convert pending budget to acquired budget of claim [%s]", shareClaim_.GetId())
 		if dpf.BatchAllocateP2(shareClaim_, shareInfo_.AvailableBlocks) {

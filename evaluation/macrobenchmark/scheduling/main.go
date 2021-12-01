@@ -120,7 +120,7 @@ func downloadFile(filepath string, url string) error {
 
 func run_exponential(scheduler_method, mode string, DPF_T int, dpf_release_period_block float64, DPF_N int, pipeline_timeout_blocks int, epsilon float64, delta float64, gamma float64, n_blocks int, block_interval_millisecond int, elephants_dir string, mice_dir string, mice_ratio float64, mean_pipelines_per_block float64, initial_blocks int, output_blocks string, output_claims string) {
 
-	r := rand.New(rand.NewSource(99))
+	r := rand.New(rand.NewSource(0))
 
 	rdp := gamma >= 0
 	s := stub.NewStub()
