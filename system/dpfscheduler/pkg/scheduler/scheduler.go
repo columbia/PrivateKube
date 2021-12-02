@@ -34,6 +34,9 @@ const (
 	// mode
 	NScheme = 0
 	TScheme = 1
+
+	Dpf           = "DPF"
+	FlatRelevance = "FLAT_RELEVANCE"
 )
 
 type DpfScheduler struct {
@@ -85,12 +88,18 @@ type DpfScheduler struct {
 	// N or T scheme
 	mode int
 
+	scheduler string
+
 	// default releasing period for DPN-T policy. Unit is ms.
 	// How frequent should the scheduler release budget
 	defaultReleasingPeriod int64
 }
 
 type DpfSchedulerOption struct {
+
+	// Scheduler
+	Scheduler string
+
 	// Scheduling Policy
 	Mode int
 
@@ -113,6 +122,7 @@ type DpfSchedulerOption struct {
 
 func DefaultNSchemeOption() DpfSchedulerOption {
 	return DpfSchedulerOption{
+		Scheduler:      Dpf,
 		Mode:           NScheme,
 		N:              100,
 		DefaultTimeout: 20000,
@@ -121,6 +131,7 @@ func DefaultNSchemeOption() DpfSchedulerOption {
 
 func DefaultTSchemeOption() DpfSchedulerOption {
 	return DpfSchedulerOption{
+		Scheduler:                Dpf,
 		Mode:                     TScheme,
 		DefaultTimeout:           20000,
 		DefaultReleasingPeriod:   10000,
@@ -156,11 +167,12 @@ func New(privacyResourceClient privacyclientset.Interface,
 	scheduler.timer = timing.MakeDefaultTimer()
 	scheduler.schedulingQueue = queue.NewSchedulingQueue(scheduler.timer.Now(), option.DefaultTimeout)
 	scheduler.updater = updater.NewResourceUpdater(privacyResourceClient, schedulerCache)
+	scheduler.scheduler = option.Scheduler
 
 	scheduler.allocChan = make(chan string, 16)
 
 	if option.Mode == TScheme {
-		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan)
+		scheduler.batch = algorithm.NewDpfTSchemeBatch(*scheduler.updater, schedulerCache, scheduler.allocChan, scheduler.scheduler)
 		releaseOption := flowreleasing.ReleaseOption{
 			DefaultDuration: option.DefaultReleasingDuration,
 		}
@@ -168,7 +180,7 @@ func New(privacyResourceClient privacyclientset.Interface,
 		scheduler.mode = TScheme
 		scheduler.defaultReleasingPeriod = option.DefaultReleasingPeriod
 	} else {
-		scheduler.batch = algorithm.NewDpfNSchemeBatch(option.N, *scheduler.updater, schedulerCache, scheduler.allocChan)
+		scheduler.batch = algorithm.NewDpfNSchemeBatch(option.N, *scheduler.updater, schedulerCache, scheduler.allocChan, scheduler.scheduler)
 		scheduler.mode = NScheme
 	}
 
@@ -403,6 +415,7 @@ func (dpfScheduler *DpfScheduler) checkTimeout(ctx context.Context) {
 func (dpfScheduler *DpfScheduler) flowReleaseAndAllocate(ctx context.Context) {
 	dpfScheduler.batch.Lock()
 	defer dpfScheduler.batch.Unlock()
+	klog.Infof("\n\n\nReleasing Budget\n\n\n")
 
 	blockStates := dpfScheduler.flowController.Release()
 	dpfScheduler.batch.AllocateAvailableBudgets(blockStates)

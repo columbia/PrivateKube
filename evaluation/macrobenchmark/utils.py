@@ -219,7 +219,7 @@ def load_block_claims(log_claims, log_blocks, failure_ratio=0.05):
     block_index = []
     arrival = []
     delay = []
-
+#     priority = []
     empty_claims = 0
     for c in claims:
         try:
@@ -274,6 +274,9 @@ def load_block_claims(log_claims, log_blocks, failure_ratio=0.05):
                 )
                 / block_interval
             )
+#             priority.append(
+#                     c["spec"]["priority"]
+#             )
         except KeyError:
             empty_claims += 1
 
@@ -291,6 +294,7 @@ def load_block_claims(log_claims, log_blocks, failure_ratio=0.05):
             "mice": mice,
             "arrival": arrival,
             "delay": delay,
+#             "priority": priority,
         }
     )
     claims_df["size"] = np.log(

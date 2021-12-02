@@ -9,6 +9,11 @@ import (
 	distuv "gonum.org/v1/gonum/stat/distuv"
 )
 
+const (
+	DPF            = "DPF"
+	FLAT_RELEVANCE = "FLAT_RELEVANCE"
+)
+
 func GetBlockId(block *columbiav1.PrivateDataBlock) string {
 	return block.Namespace + "/" + block.Name
 }

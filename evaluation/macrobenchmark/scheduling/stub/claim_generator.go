@@ -1,19 +1,19 @@
 package stub
 
 import (
+	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"math/rand"
 	"time"
-
-	columbiav1 "columbia.github.com/privatekube/privacyresource/pkg/apis/columbia.github.com/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type ClaimGenerator struct {
 	BlockGen              *BlockGenerator
 	Pipelines             *MiceElphantsSampler
 	MeanPipelinesPerBlock float64
+	Rand                  *rand.Rand
 }
 
 type Sampler interface {
@@ -45,13 +45,14 @@ func MakeSampler(rdp bool, mice_ratio float64, mice_path string, elephants_path 
 	}
 }
 
-func (p MiceElphantsSampler) SampleOne() Pipeline {
-	r := rand.Float64()
-	if r < p.MiceRatio {
-		i := rand.Intn(len(p.Mice))
+func (p MiceElphantsSampler) SampleOne(r *rand.Rand) Pipeline {
+	if r.Float64() < p.MiceRatio {
+		i := r.Intn(len(p.Mice))
+		//fmt.Println("Sample one mice: \n", i)
 		return p.Mice[i]
 	}
-	i := rand.Intn(len(p.Elephants))
+	i := r.Intn(len(p.Elephants))
+	//fmt.Println("Sample one elephants: %d\n", i)
 	return p.Elephants[i]
 }
 
@@ -69,6 +70,7 @@ func (g *ClaimGenerator) createClaim(block_index int, model Pipeline, timeout ti
 			Annotations: annotations,
 		},
 		Spec: columbiav1.PrivacyBudgetClaimSpec{
+			//Priority: int32(1000*model.Epsilon) * int32(model.NBlocks),
 			Requests: []columbiav1.Request{
 				{
 					Identifier: "1",
@@ -118,6 +120,72 @@ func (g *ClaimGenerator) Run() {
 		}
 	}()
 }
+func (g *ClaimGenerator) RunExponentialDeterministic(claim_names chan string, default_timeout time.Duration, n_blocks int32) {
+	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
+	//total_duration := time.Duration(n_blocks) * g.BlockGen.BlockInterval
+	end_time := g.BlockGen.StartTime.Add(total_duration)
+	//total_tasks := int(g.MeanPipelinesPerBlock) * g.BlockGen.MaxBlocks
+	total_tasks := int(g.MeanPipelinesPerBlock) * int(n_blocks)
+	r := rand.New(rand.NewSource(0))
+
+	index := 0
+
+	//ticker := time.NewTicker(task_interval)
+	for index < total_tasks {
+		interval := (g.Rand.ExpFloat64() / g.MeanPipelinesPerBlock) * float64(g.BlockGen.BlockInterval.Microseconds())
+		timer := time.NewTimer(time.Duration(interval) * time.Microsecond)
+		<-timer.C
+
+		block_index := g.BlockGen.CurrentIndex()
+		// Cap the timeout by the simulation running time (with a five-block margin)
+		timeout := time.Until(end_time) + 5*g.BlockGen.BlockInterval
+		if timeout > default_timeout {
+			timeout = default_timeout
+		}
+		go func(int, time.Duration, *rand.Rand) {
+
+			pipeline := g.Pipelines.SampleOne(r)
+			claim, err := g.createClaim(block_index, pipeline, timeout)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				claim_names <- claim.ObjectMeta.Name
+			}
+		}(block_index, timeout, r)
+		index++
+	}
+}
+
+//
+func (g *ClaimGenerator) RunConstant(claim_names chan string, default_timeout time.Duration, n_blocks int, task_interval time.Duration) {
+	total_duration := time.Duration(g.BlockGen.MaxBlocks+1) * g.BlockGen.BlockInterval
+	end_time := g.BlockGen.StartTime.Add(total_duration)
+	total_tasks := int(g.MeanPipelinesPerBlock) * n_blocks
+	//task_interval = time.Duration(float64(g.BlockGen.BlockInterval.Microseconds()) / g.MeanPipelinesPerBlock)
+	fmt.Println("task interval\n\n\n\n", task_interval)
+
+	index := 0
+	ticker := time.NewTicker(task_interval)
+	for index < total_tasks {
+		<-ticker.C
+		block_index := g.BlockGen.CurrentIndex()
+		// Cap the timeout by the simulation running time (with a five-block margin)
+		timeout := time.Until(end_time) + 5*g.BlockGen.BlockInterval
+		if timeout > default_timeout {
+			timeout = default_timeout
+		}
+		go func(int, time.Duration) {
+			pipeline := g.Pipelines.SampleOne(g.Rand)
+			claim, err := g.createClaim(block_index, pipeline, timeout)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				claim_names <- claim.ObjectMeta.Name
+			}
+		}(block_index, timeout)
+		index++
+	}
+}
 
 func (g *ClaimGenerator) RunExponential(claim_names chan string, default_timeout time.Duration) {
 	// NOTE: we can try other start/stop strategies
@@ -125,7 +193,7 @@ func (g *ClaimGenerator) RunExponential(claim_names chan string, default_timeout
 	end_time := g.BlockGen.StartTime.Add(total_duration)
 	for time.Since(g.BlockGen.StartTime) < total_duration {
 		// The default rate parameter is 1 (so the mean is 1 too)
-		interval := (rand.ExpFloat64() / g.MeanPipelinesPerBlock) * float64(g.BlockGen.BlockInterval.Microseconds())
+		interval := (g.Rand.ExpFloat64() / g.MeanPipelinesPerBlock) * float64(g.BlockGen.BlockInterval.Microseconds())
 		timer := time.NewTimer(time.Duration(interval) * time.Microsecond)
 		<-timer.C
 		block_index := g.BlockGen.CurrentIndex()
@@ -135,7 +203,7 @@ func (g *ClaimGenerator) RunExponential(claim_names chan string, default_timeout
 			timeout = default_timeout
 		}
 		go func(int, time.Duration) {
-			pipeline := g.Pipelines.SampleOne()
+			pipeline := g.Pipelines.SampleOne(g.Rand)
 			claim, err := g.createClaim(block_index, pipeline, timeout)
 			if err != nil {
 				log.Fatal(err)
