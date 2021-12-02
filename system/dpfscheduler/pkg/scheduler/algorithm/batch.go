@@ -169,33 +169,33 @@ func (dpf *DpfBatch) BatchRelease(requestHandler framework.RequestHandler) bool 
 
 func (dpf *DpfBatch) getAvailableBlocks(requestViewer framework.RequestViewer) []*cache.BlockState {
 
-	namespace := requestViewer.Claim.Namespace
-	request := requestViewer.View().AllocateRequest
-	requestId := requestViewer.Id
+	//namespace := requestViewer.Claim.Namespace
+	//request := requestViewer.View().AllocateRequest
+	//requestId := requestViewer.Id
 
 	predicate := func(blockState *cache.BlockState) bool {
-		block := blockState.View()
+		//block := blockState.View()
 		// If this data block has been allocated to this request, then we consider this should be available data blocks
 		// belonging to this request.
-		if _, ok := block.Status.LockedBudgetMap[requestId]; ok {
-			return true
-		}
-
-		if block.Namespace != namespace || request.Dataset != block.Spec.Dataset {
-			return false
-		}
-
-		dimensionMap := map[string]columbiav1.Dimension{}
-		for _, dimension := range block.Spec.Dimensions {
-			dimensionMap[dimension.Attribute] = dimension
-		}
-
-		for _, condition := range request.Conditions {
-			dimension, ok := dimensionMap[condition.Attribute]
-			if !ok || !validateCondition(condition, dimension) {
-				return false
-			}
-		}
+		//if _, ok := block.Status.LockedBudgetMap[requestId]; ok {
+		//	return true
+		//}
+		//
+		//if block.Namespace != namespace || request.Dataset != block.Spec.Dataset {
+		//	return false
+		//}
+		//
+		//dimensionMap := map[string]columbiav1.Dimension{}
+		//for _, dimension := range block.Spec.Dimensions {
+		//	dimensionMap[dimension.Attribute] = dimension
+		//}
+		//
+		//for _, condition := range request.Conditions {
+		//	dimension, ok := dimensionMap[condition.Attribute]
+		//	if !ok || !validateCondition(condition, dimension) {
+		//		return false
+		//	}
+		//}
 
 		return true
 	}
